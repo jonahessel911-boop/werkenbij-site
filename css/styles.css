@@ -90,7 +90,7 @@ textarea {
 }
 
 .logo img {
-  height: 56px;
+  height: 80px;
   width: auto;
   background: transparent;
 }
@@ -256,8 +256,8 @@ textarea {
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
-  align-items: flex-end;
-  padding: 7.5rem 0 3.5rem;
+  align-items: flex-start;
+  padding: 7.25rem 0 3.5rem;
   overflow: hidden;
   color: #fff;
 }
@@ -276,9 +276,21 @@ textarea {
   display: grid;
   grid-template-columns: minmax(300px, 420px) 1fr;
   gap: 2rem;
-  align-items: end;
+  align-items: start;
   width: min(1120px, calc(100% - 2.5rem));
   margin-inline: auto;
+  margin-top: 0.75rem;
+  min-height: calc(100dvh - 8.5rem);
+}
+
+.scan-card {
+  background: rgba(255, 255, 255, 0.97);
+  color: var(--ink);
+  border-radius: 18px;
+  padding: 1.5rem 1.4rem 1.25rem;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22);
+  animation: rise-in 0.7s ease both;
+  align-self: start;
 }
 
 .scan-card {
@@ -878,7 +890,7 @@ textarea {
 }
 
 .site-footer .logo img {
-  height: 52px;
+  height: 64px;
   background: transparent;
 }
 
