@@ -8,10 +8,46 @@ function postcodeProxyPlugin(token) {
     "/over-ons",
     "/contact",
     "/vrienden-van-vrienden",
+    "/service",
   ]);
 
   const handler = async (req, res, next) => {
     const url = new URL(req.url, "http://localhost");
+
+    if (url.pathname.endsWith("/api/service-verzoeken") || url.pathname === "/api/service-verzoeken") {
+      if (req.method !== "POST") {
+        res.statusCode = 405;
+        res.setHeader("Content-Type", "application/json; charset=utf-8");
+        res.end(JSON.stringify({ error: "Method not allowed" }));
+        return;
+      }
+
+      let body = "";
+      req.on("data", (chunk) => {
+        body += chunk;
+      });
+      req.on("end", async () => {
+        try {
+          const upstream = await fetch("https://platform.batterijconcept.nl/api/webhook/service-verzoeken", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body,
+          });
+          const text = await upstream.text();
+          res.statusCode = upstream.status;
+          res.setHeader("Content-Type", "application/json; charset=utf-8");
+          res.end(text);
+        } catch {
+          res.statusCode = 502;
+          res.setHeader("Content-Type", "application/json; charset=utf-8");
+          res.end(JSON.stringify({ error: "Service-webhook tijdelijk niet bereikbaar." }));
+        }
+      });
+      return;
+    }
 
     if (url.pathname.endsWith("/api/leads") || url.pathname === "/api/leads") {
       if (req.method !== "POST") {
@@ -109,6 +145,7 @@ export default defineConfig(({ mode }) => {
           overOns: resolve(__dirname, "over-ons.html"),
           contact: resolve(__dirname, "contact.html"),
           vrienden: resolve(__dirname, "vrienden-van-vrienden.html"),
+          service: resolve(__dirname, "service.html"),
         },
       },
     },

@@ -403,6 +403,48 @@ function initForms() {
     contactForm.reset();
   });
 
+  const serviceForm = qs("[data-service-form]");
+  serviceForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const submitBtn = qs('button[type="submit"]', serviceForm);
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Versturen…";
+    }
+
+    try {
+      const fd = new FormData(serviceForm);
+      const payload = {
+        email: String(fd.get("email") || "").trim(),
+        onderwerp: String(fd.get("onderwerp") || "").trim(),
+        omschrijving: String(fd.get("omschrijving") || "").trim(),
+      };
+
+      const res = await fetch("/api/service-verzoeken", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || data.message || "Serviceverzoek versturen mislukt.");
+      }
+
+      showToast("Serviceverzoek ontvangen. We nemen zo snel mogelijk contact op.");
+      serviceForm.reset();
+    } catch (err) {
+      showToast(err.message || "Versturen mislukt. Probeer opnieuw.");
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Verstuur serviceverzoek";
+      }
+    }
+  });
+
   const vriendenForm = qs("[data-vrienden-form]");
   vriendenForm?.addEventListener("submit", async (e) => {
     e.preventDefault();

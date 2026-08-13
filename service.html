@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Service | Batterijconcept.nl</title>
+  <meta name="description" content="Dien een serviceverzoek in bij Batterijconcept. We helpen je snel verder met je thuisbatterij of omvormer." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header class="site-header is-solid">
+    <div class="container nav-bar">
+      <a class="logo" href="/" aria-label="Batterijconcept home">
+        <img src="/images/logo.png" alt="Batterijconcept" />
+      </a>
+      <button class="menu-toggle" type="button" aria-label="Menu" aria-expanded="false">☰</button>
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li class="nav-item advies">
+          <button class="nav-trigger" type="button">
+            Advies
+            <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="mega">
+            <div class="mega-tabs">
+              <a href="/producten">
+                <strong>Producten</strong>
+                <span>Alpha ESS batterijen &amp; groottes</span>
+              </a>
+              <a href="/advies-aan-huis">
+                <strong>Advies aan huis</strong>
+                <span>Gratis adviseur langs</span>
+              </a>
+            </div>
+          </div>
+        </li>
+        <li><a href="/service">Service</a></li>
+        <li><a href="/vrienden-van-vrienden">Vrienden van vrienden</a></li>
+        <li><a href="/over-ons">Over ons</a></li>
+        <li><a href="/contact">Contact</a></li>
+      </ul>
+      <a class="nav-phone" href="tel:0858001645"><span class="check">✓</span> 085 800 1645</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <div class="container" style="max-width: 640px;">
+        <h1>Serviceverzoek</h1>
+        <p>Probleem met je batterij of omvormer? Dien hier je verzoek in. Gebruik het e-mailadres waarmee je bij ons bekend bent.</p>
+        <div class="form-panel" style="margin-top: 1.5rem;">
+          <form class="form-grid" data-service-form>
+            <div class="field">
+              <label for="email">E-mail*</label>
+              <input id="email" name="email" type="email" placeholder="klant@example.com" required autocomplete="email" />
+            </div>
+            <div class="field">
+              <label for="onderwerp">Onderwerp*</label>
+              <input id="onderwerp" name="onderwerp" placeholder="Omvormer foutmelding" required />
+            </div>
+            <div class="field">
+              <label for="omschrijving">Omschrijving*</label>
+              <textarea id="omschrijving" name="omschrijving" rows="5" placeholder="Beschrijf het probleem zo duidelijk mogelijk" required></textarea>
+            </div>
+            <button class="btn btn-green btn-wide" type="submit">Verstuur serviceverzoek</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>
