@@ -836,7 +836,7 @@ textarea {
 
 .footer-scan-bar {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  grid-template-columns: 1fr 0.85fr 0.65fr auto;
   gap: 0.75rem;
   align-items: end;
   background: #fff;
@@ -850,13 +850,11 @@ textarea {
   height: 48px;
   padding-inline: 1.4rem;
   white-space: nowrap;
-  grid-column: 1 / -1;
-  justify-self: stretch;
 }
 
 @media (min-width: 900px) {
   .footer-scan-bar {
-    grid-template-columns: 0.9fr 0.7fr 0.55fr 1fr 1.1fr 0.95fr auto;
+    grid-template-columns: 1fr 0.85fr 0.65fr auto;
   }
 
   .footer-scan-bar .btn {
@@ -1010,6 +1008,30 @@ textarea {
   margin: 0 0 1.35rem;
   color: var(--ink);
   font-weight: 600;
+}
+
+.scan-contact-form {
+  text-align: left;
+  margin-top: 0.5rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.scan-contact-form .btn {
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+.scan-contact-intro {
+  margin: 0 0 0.25rem;
+  color: var(--ink-muted);
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+.scan-done-text {
+  margin: 0 0 1.25rem;
+  color: var(--ink-muted);
 }
 
 .scan-error-text {

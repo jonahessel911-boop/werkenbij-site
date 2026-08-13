@@ -136,7 +136,27 @@ function ensureScanModal() {
         <p class="scan-address" data-scan-address></p>
         <p class="scan-city" data-scan-city></p>
         <p class="scan-subsidy" data-scan-subsidy></p>
-        <p class="scan-followup">Een adviseur neemt zo snel mogelijk contact met je op voor vrijblijvend advies!</p>
+        <p class="scan-followup">Laat je gegevens achter — een adviseur neemt zo snel mogelijk contact met je op voor vrijblijvend advies.</p>
+        <p class="scan-contact-intro">Jouw contactgegevens</p>
+        <form class="scan-contact-form" data-scan-contact>
+          <div class="field">
+            <label for="scan-naam">Naam*</label>
+            <input id="scan-naam" name="naam" placeholder="Voor- en achternaam" required autocomplete="name" />
+          </div>
+          <div class="field">
+            <label for="scan-email">E-mail*</label>
+            <input id="scan-email" name="email" type="email" placeholder="naam@email.nl" required autocomplete="email" />
+          </div>
+          <div class="field">
+            <label for="scan-telefoon">Telefoon*</label>
+            <input id="scan-telefoon" name="telefoon" type="tel" placeholder="06 12345678" required autocomplete="tel" />
+          </div>
+          <button class="btn btn-green" type="submit">Verstuur aanvraag</button>
+        </form>
+      </div>
+      <div data-scan-view="done" class="scan-view" hidden>
+        <p class="scan-success-label">Bedankt!</p>
+        <p class="scan-done-text">We hebben je aanvraag ontvangen. Een adviseur neemt zo snel mogelijk contact met je op.</p>
         <button class="btn btn-green" type="button" data-scan-close>Sluiten</button>
       </div>
       <div data-scan-view="error" class="scan-view" hidden>
@@ -153,6 +173,21 @@ function ensureScanModal() {
   });
   qsa("[data-scan-close]", modal).forEach((btn) => {
     btn.addEventListener("click", closeScanModal);
+  });
+
+  const contactForm = qs("[data-scan-contact]", modal);
+  contactForm?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const fd = new FormData(contactForm);
+    const lead = {
+      ...(modal._scanAddress || {}),
+      naam: String(fd.get("naam") || "").trim(),
+      email: String(fd.get("email") || "").trim(),
+      telefoon: String(fd.get("telefoon") || "").trim(),
+    };
+    modal._lastLead = lead;
+    contactForm.reset();
+    setScanView("done");
   });
 
   return modal;
@@ -184,7 +219,6 @@ async function fetchAddress(postcode, number) {
     number: String(number).trim(),
   });
 
-  // Lokaal via Vite-proxy (geen CORS). Op GitHub Pages valt dit terug op directe call.
   const candidates = [
     "/api/postcode?" + params.toString(),
     "https://json.api-postcode.nl?" + params.toString(),
@@ -219,17 +253,15 @@ async function runScan(form) {
   const postcode = String(data.get("postcode") || "").trim();
   const huisnr = String(data.get("huisnr") || "").trim();
   const toev = String(data.get("toev") || "").trim();
-  const naam = String(data.get("naam") || "").trim();
-  const email = String(data.get("email") || "").trim();
-  const telefoon = String(data.get("telefoon") || "").trim();
 
-  if (!postcode || !huisnr || !naam || !email || !telefoon) {
-    showToast("Vul alle verplichte velden in (inclusief naam, e-mail en telefoon).");
+  if (!postcode || !huisnr) {
+    showToast("Vul postcode en huisnummer in.");
     return;
   }
 
   const number = buildHouseNumber(huisnr, toev);
   const previewLabel = `${normalizePostcode(postcode)} ${number}`;
+  const modal = ensureScanModal();
 
   openScanModal();
   setScanView("loading");
@@ -241,6 +273,8 @@ async function runScan(form) {
     const streetLine = formatAddressLine(address);
     const city = address.city || "";
 
+    modal._scanAddress = { postcode: normalizePostcode(postcode), number, address };
+
     qs("[data-scan-address]").textContent = streetLine;
     qs("[data-scan-city]").textContent = city;
     qs("[data-scan-subsidy]").innerHTML = `${escapeHtml(city)} heeft momenteel <strong>2 gunstige overheidsregelingen</strong> die mogelijk voor jouw situatie toepasbaar zijn.`;
@@ -249,12 +283,8 @@ async function runScan(form) {
     if (resultHeading) resultHeading.textContent = `Situatie bekijken voor ${streetLine}`;
     if (title) title.textContent = `Situatie bekijken voor ${streetLine}`;
 
-    // Kleine delay zodat de loader zichtbaar blijft
     await new Promise((r) => setTimeout(r, 450));
     setScanView("result");
-
-    // Contactgegevens blijven beschikbaar voor later backend-koppeling
-    form.dataset.lastLead = JSON.stringify({ naam, email, telefoon, address });
     form.reset();
   } catch (err) {
     qs("[data-scan-error]").textContent =
