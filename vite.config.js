@@ -1,9 +1,7 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import { resolve } from "node:path";
 
-const POSTCODE_TOKEN = "209313a0-694c-4441-9d90-b785ac3c6d08";
-
-function postcodeProxyPlugin() {
+function postcodeProxyPlugin(token) {
   const pages = new Set([
     "/producten",
     "/advies-aan-huis",
@@ -16,10 +14,17 @@ function postcodeProxyPlugin() {
     const url = new URL(req.url, "http://localhost");
 
     if (url.pathname.endsWith("/api/postcode") || url.pathname === "/api/postcode") {
+      if (!token) {
+        res.statusCode = 500;
+        res.setHeader("Content-Type", "application/json; charset=utf-8");
+        res.end(JSON.stringify({ error: "POSTCODE_API_TOKEN ontbreekt in .env.local" }));
+        return;
+      }
+
       const target = `https://json.api-postcode.nl/${url.search}`;
       try {
         const upstream = await fetch(target, {
-          headers: { token: POSTCODE_TOKEN, Accept: "application/json" },
+          headers: { token, Accept: "application/json" },
         });
         const body = await upstream.text();
         res.statusCode = upstream.status;
@@ -34,7 +39,6 @@ function postcodeProxyPlugin() {
       return;
     }
 
-    // Clean URLs in local Vite: /producten → /producten.html
     const clean = url.pathname.replace(/\/$/, "") || "/";
     if (pages.has(clean)) {
       req.url = `${clean}.html${url.search}`;
@@ -54,23 +58,28 @@ function postcodeProxyPlugin() {
   };
 }
 
-export default defineConfig({
-  base: "/",
-  plugins: [postcodeProxyPlugin()],
-  build: {
-    rollupOptions: {
-      input: {
-        main: resolve(__dirname, "index.html"),
-        producten: resolve(__dirname, "producten.html"),
-        advies: resolve(__dirname, "advies-aan-huis.html"),
-        overOns: resolve(__dirname, "over-ons.html"),
-        contact: resolve(__dirname, "contact.html"),
-        vrienden: resolve(__dirname, "vrienden-van-vrienden.html"),
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "");
+  const token = env.POSTCODE_API_TOKEN || process.env.POSTCODE_API_TOKEN || "";
+
+  return {
+    base: "/",
+    plugins: [postcodeProxyPlugin(token)],
+    build: {
+      rollupOptions: {
+        input: {
+          main: resolve(__dirname, "index.html"),
+          producten: resolve(__dirname, "producten.html"),
+          advies: resolve(__dirname, "advies-aan-huis.html"),
+          overOns: resolve(__dirname, "over-ons.html"),
+          contact: resolve(__dirname, "contact.html"),
+          vrienden: resolve(__dirname, "vrienden-van-vrienden.html"),
+        },
       },
     },
-  },
-  server: {
-    port: 5173,
-    open: true,
-  },
+    server: {
+      port: 5173,
+      open: true,
+    },
+  };
 });

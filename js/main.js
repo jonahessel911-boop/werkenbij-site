@@ -33,8 +33,6 @@ const PRODUCTS = {
   },
 };
 
-const POSTCODE_TOKEN = "209313a0-694c-4441-9d90-b785ac3c6d08";
-
 function qs(sel, root = document) {
   return root.querySelector(sel);
 }
@@ -233,33 +231,11 @@ async function fetchAddress(postcode, number) {
     number: String(number).trim(),
   });
 
-  const candidates = [
-    "/api/postcode?" + params.toString(),
-    "https://json.api-postcode.nl?" + params.toString(),
-  ];
+  const res = await fetch(`/api/postcode?${params}`);
+  const data = await res.json().catch(() => ({}));
 
-  let lastError = new Error("Kon adresgegevens niet ophalen.");
-
-  for (const url of candidates) {
-    try {
-      const headers = url.startsWith("http")
-        ? { token: POSTCODE_TOKEN, Accept: "application/json" }
-        : { Accept: "application/json" };
-
-      const res = await fetch(url, { headers });
-      const data = await res.json().catch(() => ({}));
-
-      if (res.ok && data.street) return data;
-      if (data.error) lastError = new Error(data.error);
-      else if (!res.ok && res.status !== 404) {
-        lastError = new Error("Kon adresgegevens niet ophalen.");
-      }
-    } catch (err) {
-      lastError = err instanceof Error ? err : lastError;
-    }
-  }
-
-  throw lastError;
+  if (res.ok && data.street) return data;
+  throw new Error(data.error || "Kon adresgegevens niet ophalen.");
 }
 
 async function runScan(form) {

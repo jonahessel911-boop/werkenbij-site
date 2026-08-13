@@ -1,13 +1,10 @@
 /**
  * Cloudflare Worker proxy for api-postcode.nl (needed on GitHub Pages because of CORS).
  *
- * Deploy:
- *   1. Ga naar https://dash.cloudflare.com → Workers → Create
- *   2. Plak deze code
- *   3. Deploy en zet de worker-URL in js/main.js als POSTCODE_PROXY_URL
+ * Set POSTCODE_API_TOKEN as a Worker secret / env binding.
  */
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
     const url = new URL(request.url);
     if (request.method === "OPTIONS") {
       return new Response(null, {
@@ -19,13 +16,21 @@ export default {
       });
     }
 
+    const token = env.POSTCODE_API_TOKEN;
+    if (!token) {
+      return new Response(JSON.stringify({ error: "POSTCODE_API_TOKEN ontbreekt" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      });
+    }
+
     const postcode = url.searchParams.get("postcode") || "";
     const number = url.searchParams.get("number") || "";
     const target = `https://json.api-postcode.nl/?postcode=${encodeURIComponent(postcode)}&number=${encodeURIComponent(number)}`;
 
     const upstream = await fetch(target, {
       headers: {
-        token: "209313a0-694c-4441-9d90-b785ac3c6d08",
+        token,
         Accept: "application/json",
       },
     });

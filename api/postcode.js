@@ -1,8 +1,12 @@
-const POSTCODE_TOKEN = "209313a0-694c-4441-9d90-b785ac3c6d08";
-
 export default async function handler(req, res) {
   if (req.method !== "GET") {
     res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  const token = process.env.POSTCODE_API_TOKEN;
+  if (!token) {
+    res.status(500).json({ error: "POSTCODE_API_TOKEN ontbreekt in environment." });
     return;
   }
 
@@ -18,7 +22,7 @@ export default async function handler(req, res) {
     const params = new URLSearchParams({ postcode, number });
     const upstream = await fetch(`https://json.api-postcode.nl/?${params}`, {
       headers: {
-        token: POSTCODE_TOKEN,
+        token,
         Accept: "application/json",
       },
     });
