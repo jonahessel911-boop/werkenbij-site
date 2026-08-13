@@ -9,6 +9,7 @@
     { "source": "/producten.html", "destination": "/producten", "permanent": true },
     { "source": "/advies-aan-huis.html", "destination": "/advies-aan-huis", "permanent": true },
     { "source": "/over-ons.html", "destination": "/over-ons", "permanent": true },
-    { "source": "/contact.html", "destination": "/contact", "permanent": true }
+    { "source": "/contact.html", "destination": "/contact", "permanent": true },
+    { "source": "/vrienden-van-vrienden.html", "destination": "/vrienden-van-vrienden", "permanent": true }
   ]
 }

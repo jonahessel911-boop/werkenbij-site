@@ -330,6 +330,13 @@ function initForms() {
     showToast("Bericht verzonden. We reageren op werkdagen binnen 1 werkdag.");
     contactForm.reset();
   });
+
+  const vriendenForm = qs("[data-vrienden-form]");
+  vriendenForm?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    showToast("Bedankt! Je €250-kortingsaanvraag is ontvangen. We nemen snel contact op.");
+    vriendenForm.reset();
+  });
 }
 
 function initProductModal() {

@@ -9,6 +9,7 @@ function postcodeProxyPlugin() {
     "/advies-aan-huis",
     "/over-ons",
     "/contact",
+    "/vrienden-van-vrienden",
   ]);
 
   const handler = async (req, res, next) => {
@@ -64,6 +65,7 @@ export default defineConfig({
         advies: resolve(__dirname, "advies-aan-huis.html"),
         overOns: resolve(__dirname, "over-ons.html"),
         contact: resolve(__dirname, "contact.html"),
+        vrienden: resolve(__dirname, "vrienden-van-vrienden.html"),
       },
     },
   },

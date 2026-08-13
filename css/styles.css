@@ -1146,6 +1146,167 @@ textarea {
   }
 }
 
+/* —— Vrienden van vrienden —— */
+.vrienden-hero h1 {
+  max-width: 16ch;
+}
+
+.vrienden-eyebrow {
+  display: inline-block;
+  margin: 0 0 0.75rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: var(--green-soft);
+  color: var(--green-dark);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.vrienden-layout {
+  display: grid;
+  grid-template-columns: 0.95fr 1.05fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.vrienden-card-wrap {
+  position: sticky;
+  top: 6rem;
+}
+
+.vriend-card {
+  aspect-ratio: 1.6 / 1;
+  width: 100%;
+  max-width: 440px;
+  border-radius: 18px;
+  padding: 1.25rem 1.3rem;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 22px 50px rgba(10, 71, 39, 0.28);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(243, 112, 33, 0.35), transparent 42%),
+    linear-gradient(145deg, #0a4727 0%, #0d5c32 45%, #1a8a3e 100%);
+  overflow: hidden;
+  position: relative;
+}
+
+.vriend-card::after {
+  content: "";
+  position: absolute;
+  inset: auto -20% -40% auto;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+}
+
+.vriend-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.55rem;
+}
+
+.vriend-card-logo {
+  height: 42px;
+  width: auto;
+  background: #fff;
+  border-radius: 10px;
+  padding: 0.2rem 0.35rem;
+}
+
+.vriend-card-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.vriend-card-kicker {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.vriend-card-title {
+  margin: 0.15rem 0 0.45rem;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 2.6rem);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+}
+
+.vriend-card-title + .vriend-card-text,
+.vriend-card-text {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.88);
+  max-width: 34ch;
+}
+
+.vriend-card-qr-block {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding-top: 0.85rem;
+}
+
+.vriend-card-qr-block img {
+  width: 88px;
+  height: 88px;
+  border-radius: 10px;
+  background: #fff;
+  padding: 0.35rem;
+  flex-shrink: 0;
+}
+
+.vriend-card-qr-block strong {
+  display: block;
+  font-size: 0.92rem;
+  margin-bottom: 0.15rem;
+}
+
+.vriend-card-qr-block span {
+  display: block;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.78);
+  word-break: break-all;
+}
+
+.vriend-card-caption {
+  margin: 0.75rem 0 0;
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+}
+
+.vrienden-form-panel h2 {
+  color: var(--green-deep);
+}
+
+@media (max-width: 920px) {
+  .vrienden-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .vrienden-card-wrap {
+    position: static;
+  }
+
+  .vriend-card {
+    max-width: none;
+  }
+}
+
 @keyframes rise-in {
   from {
     opacity: 0;
