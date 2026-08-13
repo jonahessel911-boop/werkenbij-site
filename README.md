@@ -2,19 +2,28 @@
 
 Statische website voor Batterijconcept — thuisbatterij-advies en installatie.
 
-## Lokaal bekijken
+**Repo:** https://github.com/jonahessel911-boop/batterijconcept
+
+## Lokaal
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open daarna [http://localhost:5173](http://localhost:5173).
+## Deploy (Vercel)
+
+Connected to GitHub: pushes to `main` deploy automatisch.
+
+```bash
+npm run build
+npx vercel --prod
+```
 
 ## Pagina’s
 
 - `index.html` — home met hero + scan
-- `producten.html` — Alpha ESS producten (klik voor details)
+- `producten.html` — Alpha ESS producten
 - `advies-aan-huis.html` — aanvraagformulier adviseur
-- `over-ons.html` — verhaal over advies & gratis huisbezoek
-- `contact.html` — e-mail, telefoon, openingstijden
+- `over-ons.html` — over Batterijconcept
+- `contact.html` — contactgegevens

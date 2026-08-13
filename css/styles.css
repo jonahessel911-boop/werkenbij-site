@@ -836,7 +836,7 @@ textarea {
 
 .footer-scan-bar {
   display: grid;
-  grid-template-columns: 1fr 1fr auto;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
   gap: 0.75rem;
   align-items: end;
   background: #fff;
@@ -850,6 +850,19 @@ textarea {
   height: 48px;
   padding-inline: 1.4rem;
   white-space: nowrap;
+  grid-column: 1 / -1;
+  justify-self: stretch;
+}
+
+@media (min-width: 900px) {
+  .footer-scan-bar {
+    grid-template-columns: 0.9fr 0.7fr 0.55fr 1fr 1.1fr 0.95fr auto;
+  }
+
+  .footer-scan-bar .btn {
+    grid-column: auto;
+    justify-self: start;
+  }
 }
 
 /* —— Footer —— */
@@ -926,6 +939,88 @@ textarea {
 .toast.show {
   transform: translateY(0);
   opacity: 1;
+}
+
+/* Scan result modal */
+.scan-modal-panel {
+  width: min(480px, 100%);
+  text-align: center;
+  padding: 1.75rem 1.5rem 1.5rem;
+}
+
+.scan-view h2 {
+  margin: 0 0 1.1rem;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--green-deep);
+  letter-spacing: -0.02em;
+}
+
+.scan-loader {
+  width: 48px;
+  height: 48px;
+  margin: 0.5rem auto 1rem;
+  border: 3px solid var(--green-soft);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.scan-loading-text {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.95rem;
+}
+
+.scan-success-label {
+  margin: 0 0 0.55rem;
+  font-family: var(--font-display);
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: var(--green);
+  letter-spacing: -0.02em;
+}
+
+.scan-result-lead {
+  margin: 0 0 0.85rem;
+  color: var(--ink-muted);
+}
+
+.scan-address {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.scan-city {
+  margin: 0.15rem 0 1rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--green-deep);
+}
+
+.scan-subsidy {
+  margin: 0 0 1rem;
+  color: var(--ink-muted);
+  line-height: 1.5;
+}
+
+.scan-followup {
+  margin: 0 0 1.35rem;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.scan-error-text {
+  margin: 0 0 1.25rem;
+  color: var(--ink-muted);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes rise-in {
