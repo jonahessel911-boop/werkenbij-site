@@ -33,6 +33,38 @@ const PRODUCTS = {
   },
 };
 
+function formatPostcodeDisplay(value) {
+  const raw = normalizePostcode(value);
+  if (raw.length === 6) return `${raw.slice(0, 4)} ${raw.slice(4)}`;
+  return raw;
+}
+
+function getUtmSource(fallback = "website") {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("utm_source") || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+async function submitLead(payload) {
+  const res = await fetch("/api/leads", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error || data.message || "Lead versturen mislukt.");
+  }
+  return data;
+}
+
 function qs(sel, root = document) {
   return root.querySelector(sel);
 }
@@ -188,18 +220,42 @@ function ensureScanModal() {
   });
 
   const contactForm = qs("[data-scan-contact]", modal);
-  contactForm?.addEventListener("submit", (e) => {
+  contactForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const fd = new FormData(contactForm);
-    const lead = {
-      ...(modal._scanAddress || {}),
-      naam: String(fd.get("naam") || "").trim(),
-      email: String(fd.get("email") || "").trim(),
-      telefoon: String(fd.get("telefoon") || "").trim(),
-    };
-    modal._lastLead = lead;
-    contactForm.reset();
-    setScanView("done");
+    const submitBtn = qs('button[type="submit"]', contactForm);
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Versturen…";
+    }
+
+    try {
+      const fd = new FormData(contactForm);
+      const scan = modal._scanAddress || {};
+      const address = scan.address || {};
+      const huisnummer = String(scan.number || address.house_number || "").trim();
+      const postcode = formatPostcodeDisplay(scan.postcode || address.postcode || address.zip_code || "");
+
+      await submitLead({
+        naam: String(fd.get("naam") || "").trim(),
+        email: String(fd.get("email") || "").trim(),
+        telefoon: String(fd.get("telefoon") || "").trim(),
+        postcode,
+        huisnummer,
+        adres: address.street || "",
+        woonplaats: address.city || "",
+        utm_source: getUtmSource("website"),
+      });
+
+      contactForm.reset();
+      setScanView("done");
+    } catch (err) {
+      showToast(err.message || "Versturen mislukt. Probeer opnieuw.");
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Verstuur aanvraag";
+      }
+    }
   });
 
   return modal;
@@ -294,10 +350,50 @@ function initForms() {
   qsa("[data-scan-form]").forEach(handleScanSubmit);
 
   const adviesForm = qs("[data-advies-form]");
-  adviesForm?.addEventListener("submit", (e) => {
+  adviesForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
-    showToast("Bedankt! Een adviseur plant zo snel mogelijk een gratis huisbezoek.");
-    adviesForm.reset();
+    const submitBtn = qs('button[type="submit"]', adviesForm);
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Versturen…";
+    }
+
+    try {
+      const fd = new FormData(adviesForm);
+      const postcode = formatPostcodeDisplay(fd.get("postcode"));
+      const huisnummer = buildHouseNumber(fd.get("huisnr"), fd.get("toev"));
+
+      let adres = "";
+      let woonplaats = "";
+      try {
+        const address = await fetchAddress(postcode, huisnummer);
+        adres = address.street || "";
+        woonplaats = address.city || "";
+      } catch {
+        // optioneel
+      }
+
+      await submitLead({
+        naam: String(fd.get("naam") || "").trim(),
+        email: String(fd.get("email") || "").trim(),
+        telefoon: String(fd.get("telefoon") || "").trim(),
+        postcode,
+        huisnummer,
+        adres,
+        woonplaats,
+        utm_source: getUtmSource("advies-aan-huis"),
+      });
+
+      showToast("Bedankt! Een adviseur plant zo snel mogelijk een gratis huisbezoek.");
+      adviesForm.reset();
+    } catch (err) {
+      showToast(err.message || "Versturen mislukt. Probeer opnieuw.");
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Verstuur aanvraag";
+      }
+    }
   });
 
   const contactForm = qs("[data-contact-form]");
@@ -308,10 +404,52 @@ function initForms() {
   });
 
   const vriendenForm = qs("[data-vrienden-form]");
-  vriendenForm?.addEventListener("submit", (e) => {
+  vriendenForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
-    showToast("Bedankt! Je €250-kortingsaanvraag is ontvangen. We nemen snel contact op.");
-    vriendenForm.reset();
+    const submitBtn = qs('button[type="submit"]', vriendenForm);
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Versturen…";
+    }
+
+    try {
+      const fd = new FormData(vriendenForm);
+      const postcode = formatPostcodeDisplay(fd.get("postcode"));
+      const huisnummer = String(fd.get("huisnr") || "").trim();
+      const referrer = String(fd.get("referrer") || "").trim();
+
+      let adres = "";
+      let woonplaats = "";
+      try {
+        const address = await fetchAddress(postcode, huisnummer);
+        adres = address.street || "";
+        woonplaats = address.city || "";
+      } catch {
+        // Adreslookup is optioneel; lead gaat toch door
+      }
+
+      await submitLead({
+        naam: String(fd.get("naam") || "").trim(),
+        email: String(fd.get("email") || "").trim(),
+        telefoon: String(fd.get("telefoon") || "").trim(),
+        postcode,
+        huisnummer,
+        adres,
+        woonplaats,
+        utm_source: "Referral",
+        referrer,
+      });
+
+      showToast("Bedankt! Je €250-kortingsaanvraag is ontvangen. We nemen snel contact op.");
+      vriendenForm.reset();
+    } catch (err) {
+      showToast(err.message || "Versturen mislukt. Probeer opnieuw.");
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Claim €250 korting";
+      }
+    }
   });
 }
 
