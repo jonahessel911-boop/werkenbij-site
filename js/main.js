@@ -1,7 +1,7 @@
 const PRODUCTS = {
   "g3-t10": {
     name: "Alpha ESS Smile G3-T10",
-    image: "images/products/g3-t10.png",
+    image: "/images/products/g3-t10.png",
     intro:
       "Krachtige 10 kW drie-fase hybride oplossing voor huishoudens met zonnepanelen en hoger verbruik. Ideaal om eigen opwek maximaal op te slaan.",
     sizes: [
@@ -12,7 +12,7 @@ const PRODUCTS = {
   },
   "g3-s5": {
     name: "Alpha ESS Smile G3-S5",
-    image: "images/products/g3-s5.png",
+    image: "/images/products/g3-s5.png",
     intro:
       "Compacte 5 kW single-phase hybride batterij voor de meeste Nederlandse woningen. Modulair uit te breiden wanneer je verbruik groeit.",
     sizes: [
@@ -23,7 +23,7 @@ const PRODUCTS = {
   },
   "g3-bat": {
     name: "Alpha ESS Smile G3 Batterijmodule",
-    image: "images/products/g3-bat.png",
+    image: "/images/products/g3-bat.png",
     intro:
       "Losse batterijmodules om je bestaande Alpha ESS-systeem uit te breiden. Plug-and-play, IP65, geschikt voor binnen en buiten.",
     sizes: [

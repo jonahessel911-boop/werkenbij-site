@@ -2,7 +2,13 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "rewrites": [
-    { "source": "/api/postcode", "destination": "/api/postcode" }
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "redirects": [
+    { "source": "/index.html", "destination": "/", "permanent": true },
+    { "source": "/producten.html", "destination": "/producten", "permanent": true },
+    { "source": "/advies-aan-huis.html", "destination": "/advies-aan-huis", "permanent": true },
+    { "source": "/over-ons.html", "destination": "/over-ons", "permanent": true },
+    { "source": "/contact.html", "destination": "/contact", "permanent": true }
   ]
 }

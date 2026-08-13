@@ -4,27 +4,42 @@ import { resolve } from "node:path";
 const POSTCODE_TOKEN = "209313a0-694c-4441-9d90-b785ac3c6d08";
 
 function postcodeProxyPlugin() {
+  const pages = new Set([
+    "/producten",
+    "/advies-aan-huis",
+    "/over-ons",
+    "/contact",
+  ]);
+
   const handler = async (req, res, next) => {
     const url = new URL(req.url, "http://localhost");
-    if (!url.pathname.endsWith("/api/postcode") && url.pathname !== "/api/postcode") {
-      return next();
+
+    if (url.pathname.endsWith("/api/postcode") || url.pathname === "/api/postcode") {
+      const target = `https://json.api-postcode.nl/${url.search}`;
+      try {
+        const upstream = await fetch(target, {
+          headers: { token: POSTCODE_TOKEN, Accept: "application/json" },
+        });
+        const body = await upstream.text();
+        res.statusCode = upstream.status;
+        res.setHeader("Content-Type", "application/json; charset=utf-8");
+        res.setHeader("Cache-Control", "no-store");
+        res.end(body);
+      } catch {
+        res.statusCode = 502;
+        res.setHeader("Content-Type", "application/json; charset=utf-8");
+        res.end(JSON.stringify({ error: "Postcode-service tijdelijk niet bereikbaar." }));
+      }
+      return;
     }
 
-    const target = `https://json.api-postcode.nl/${url.search}`;
-    try {
-      const upstream = await fetch(target, {
-        headers: { token: POSTCODE_TOKEN, Accept: "application/json" },
-      });
-      const body = await upstream.text();
-      res.statusCode = upstream.status;
-      res.setHeader("Content-Type", "application/json; charset=utf-8");
-      res.setHeader("Cache-Control", "no-store");
-      res.end(body);
-    } catch {
-      res.statusCode = 502;
-      res.setHeader("Content-Type", "application/json; charset=utf-8");
-      res.end(JSON.stringify({ error: "Postcode-service tijdelijk niet bereikbaar." }));
+    // Clean URLs in local Vite: /producten → /producten.html
+    const clean = url.pathname.replace(/\/$/, "") || "/";
+    if (pages.has(clean)) {
+      req.url = `${clean}.html${url.search}`;
     }
+
+    return next();
   };
 
   return {
