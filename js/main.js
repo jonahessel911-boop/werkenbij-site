@@ -500,10 +500,30 @@ function initProductModal() {
   });
 }
 
+function initWhatsAppButton() {
+  if (qs(".whatsapp-fab")) return;
+
+  const link = document.createElement("a");
+  link.className = "whatsapp-fab";
+  link.href = "https://wa.me/31858001645";
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  link.setAttribute("aria-label", "WhatsApp: 085 800 1645");
+  link.innerHTML = `
+    <svg viewBox="0 0 32 32" aria-hidden="true" fill="currentColor">
+      <path d="M19.11 17.34c-.28-.14-1.64-.81-1.9-.9-.25-.1-.44-.14-.62.14-.18.28-.71.9-.87 1.08-.16.18-.32.2-.6.07-.28-.14-1.17-.43-2.23-1.37-.82-.73-1.38-1.64-1.54-1.92-.16-.28-.02-.43.12-.57.13-.13.28-.32.42-.48.14-.16.18-.28.28-.46.1-.18.05-.35-.02-.48-.07-.14-.62-1.5-.85-2.05-.22-.53-.45-.46-.62-.47h-.53c-.18 0-.48.07-.73.35-.25.28-.96.94-.96 2.28s.98 2.64 1.12 2.82c.14.18 1.93 2.95 4.68 4.14 1.74.75 2.36.82 3.21.69.5-.08 1.64-.67 1.87-1.32.23-.65.23-1.2.16-1.32-.07-.11-.25-.18-.53-.32z"/>
+      <path d="M16.02 3C9.39 3 4 8.38 4 15c0 2.22.61 4.29 1.67 6.07L4 29l8.12-1.64A11.9 11.9 0 0 0 16.02 27C22.65 27 28 21.62 28 15S22.65 3 16.02 3zm0 21.82c-1.95 0-3.76-.56-5.3-1.53l-.38-.24-4.82.97 1.02-4.7-.25-.4A9.78 9.78 0 0 1 6.2 15c0-5.42 4.42-9.82 9.82-9.82s9.82 4.4 9.82 9.82-4.4 9.82-9.82 9.82z"/>
+    </svg>
+    <span>WhatsApp</span>
+  `;
+  document.body.appendChild(link);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   initNav();
   initForms();
   initProductModal();
+  initWhatsAppButton();
 
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;

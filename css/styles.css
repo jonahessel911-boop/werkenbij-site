@@ -939,6 +939,52 @@ textarea {
   opacity: 1;
 }
 
+.whatsapp-fab {
+  position: fixed;
+  right: 1.15rem;
+  bottom: 1.15rem;
+  z-index: 70;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.7rem 1rem 0.7rem 0.75rem;
+  border-radius: 999px;
+  background: #25d366;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.92rem;
+  box-shadow: 0 12px 30px rgba(37, 211, 102, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.whatsapp-fab:hover {
+  transform: translateY(-2px);
+  background: #1ebe57;
+  box-shadow: 0 16px 34px rgba(37, 211, 102, 0.42);
+}
+
+.whatsapp-fab svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.whatsapp-fab span {
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .whatsapp-fab span {
+    display: none;
+  }
+
+  .whatsapp-fab {
+    padding: 0.85rem;
+    right: 1rem;
+    bottom: 1rem;
+  }
+}
+
 /* Scan result modal — fullscreen */
 .scan-modal {
   padding: 0;
