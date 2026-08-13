@@ -939,24 +939,96 @@ textarea {
   opacity: 1;
 }
 
-/* Scan result modal */
-.scan-modal-panel {
-  width: min(480px, 100%);
+/* Scan result modal — fullscreen */
+.scan-modal {
+  padding: 0;
+  background: #fff;
+  place-items: stretch;
+}
+
+.scan-modal .scan-modal-panel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  min-height: 100dvh;
+  overflow: hidden;
+  border-radius: 0;
+  box-shadow: none;
+  transform: none;
+  padding: 0;
   text-align: center;
-  padding: 1.75rem 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(ellipse at top right, rgba(243, 112, 33, 0.08), transparent 42%),
+    linear-gradient(180deg, #eaf6ee 0%, #fff 38%);
+}
+
+.scan-modal.open .scan-modal-panel {
+  transform: none;
+}
+
+.scan-modal .modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 2;
+  float: none;
+  width: 44px;
+  height: 44px;
+  background: #fff;
+  border: 1px solid var(--line);
+  box-shadow: 0 6px 18px rgba(13, 92, 50, 0.08);
+}
+
+.scan-modal .scan-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: clamp(1.25rem, 4vw, 3rem);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.scan-modal .scan-view[hidden] {
+  display: none !important;
+}
+
+.scan-result-grid {
+  width: min(980px, 100%);
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: clamp(1.5rem, 4vw, 3rem);
+  align-items: center;
+  text-align: left;
+}
+
+.scan-result-copy {
+  padding-right: 0.5rem;
+}
+
+.scan-result-form {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 1.35rem 1.25rem;
+  box-shadow: 0 16px 40px rgba(13, 92, 50, 0.08);
 }
 
 .scan-view h2 {
-  margin: 0 0 1.1rem;
+  margin: 0 0 0.85rem;
   font-family: var(--font-display);
-  font-size: 1.25rem;
+  font-size: clamp(1.15rem, 2.4vw, 1.45rem);
   color: var(--green-deep);
   letter-spacing: -0.02em;
 }
 
 .scan-loader {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   margin: 0.5rem auto 1rem;
   border: 3px solid var(--green-soft);
   border-top-color: var(--green);
@@ -967,33 +1039,33 @@ textarea {
 .scan-loading-text {
   margin: 0;
   color: var(--ink-muted);
-  font-size: 0.95rem;
+  font-size: 1rem;
 }
 
 .scan-success-label {
   margin: 0 0 0.55rem;
   font-family: var(--font-display);
-  font-size: 1.55rem;
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
   font-weight: 700;
   color: var(--green);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
 .scan-result-lead {
-  margin: 0 0 0.85rem;
+  margin: 0 0 0.65rem;
   color: var(--ink-muted);
 }
 
 .scan-address {
   margin: 0;
-  font-size: 1.15rem;
+  font-size: clamp(1.2rem, 2.5vw, 1.5rem);
   font-weight: 700;
   color: var(--ink);
 }
 
 .scan-city {
-  margin: 0.15rem 0 1rem;
-  font-size: 1.05rem;
+  margin: 0.2rem 0 1rem;
+  font-size: 1.15rem;
   font-weight: 600;
   color: var(--green-deep);
 }
@@ -1001,42 +1073,71 @@ textarea {
 .scan-subsidy {
   margin: 0 0 1rem;
   color: var(--ink-muted);
-  line-height: 1.5;
+  line-height: 1.55;
+  max-width: 38ch;
 }
 
 .scan-followup {
-  margin: 0 0 1.35rem;
+  margin: 0;
   color: var(--ink);
   font-weight: 600;
+  max-width: 40ch;
+  line-height: 1.45;
 }
 
 .scan-contact-form {
   text-align: left;
-  margin-top: 0.5rem;
+  margin-top: 0.35rem;
   display: grid;
-  gap: 0.75rem;
+  gap: 0.7rem;
 }
 
 .scan-contact-form .btn {
   width: 100%;
-  margin-top: 0.25rem;
+  margin-top: 0.35rem;
 }
 
 .scan-contact-intro {
-  margin: 0 0 0.25rem;
+  margin: 0 0 0.35rem;
   color: var(--ink-muted);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   text-align: left;
 }
 
 .scan-done-text {
   margin: 0 0 1.25rem;
   color: var(--ink-muted);
+  max-width: 36ch;
 }
 
 .scan-error-text {
   margin: 0 0 1.25rem;
   color: var(--ink-muted);
+}
+
+@media (max-width: 820px) {
+  .scan-result-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .scan-result-copy {
+    text-align: center;
+  }
+
+  .scan-subsidy,
+  .scan-followup {
+    margin-inline: auto;
+  }
+
+  .scan-modal .scan-view {
+    justify-content: flex-start;
+    padding-top: 4.5rem;
+    overflow: auto;
+  }
 }
 
 @keyframes spin {

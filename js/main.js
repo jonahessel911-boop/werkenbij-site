@@ -114,7 +114,15 @@ function showToast(message) {
 
 function ensureScanModal() {
   let modal = qs("#scan-modal");
-  if (modal) return modal;
+  if (modal) {
+    // Upgrade older modal markup after deploys/HMR
+    if (!qs(".scan-result-grid", modal)) {
+      modal.remove();
+      modal = null;
+    } else {
+      return modal;
+    }
+  }
 
   modal = document.createElement("div");
   modal.id = "scan-modal";
@@ -129,30 +137,36 @@ function ensureScanModal() {
         <div class="scan-loader" aria-hidden="true"></div>
         <p class="scan-loading-text">Adresgegevens ophalen…</p>
       </div>
-      <div data-scan-view="result" class="scan-view" hidden>
-        <h2 data-scan-result-heading>Situatie bekijken</h2>
-        <p class="scan-success-label">Goed nieuws!</p>
-        <p class="scan-result-lead">Het lijkt erop dat:</p>
-        <p class="scan-address" data-scan-address></p>
-        <p class="scan-city" data-scan-city></p>
-        <p class="scan-subsidy" data-scan-subsidy></p>
-        <p class="scan-followup">Laat je gegevens achter — een adviseur neemt zo snel mogelijk contact met je op voor vrijblijvend advies.</p>
-        <p class="scan-contact-intro">Jouw contactgegevens</p>
-        <form class="scan-contact-form" data-scan-contact>
-          <div class="field">
-            <label for="scan-naam">Naam*</label>
-            <input id="scan-naam" name="naam" placeholder="Voor- en achternaam" required autocomplete="name" />
+      <div data-scan-view="result" class="scan-view scan-view-result" hidden>
+        <div class="scan-result-grid">
+          <div class="scan-result-copy">
+            <h2 data-scan-result-heading>Situatie bekijken</h2>
+            <p class="scan-success-label">Goed nieuws!</p>
+            <p class="scan-result-lead">Het lijkt erop dat:</p>
+            <p class="scan-address" data-scan-address></p>
+            <p class="scan-city" data-scan-city></p>
+            <p class="scan-subsidy" data-scan-subsidy></p>
+            <p class="scan-followup">Laat je gegevens achter — een adviseur neemt zo snel mogelijk contact met je op voor vrijblijvend advies.</p>
           </div>
-          <div class="field">
-            <label for="scan-email">E-mail*</label>
-            <input id="scan-email" name="email" type="email" placeholder="naam@email.nl" required autocomplete="email" />
+          <div class="scan-result-form">
+            <p class="scan-contact-intro">Jouw contactgegevens</p>
+            <form class="scan-contact-form" data-scan-contact>
+              <div class="field">
+                <label for="scan-naam">Naam*</label>
+                <input id="scan-naam" name="naam" placeholder="Voor- en achternaam" required autocomplete="name" />
+              </div>
+              <div class="field">
+                <label for="scan-email">E-mail*</label>
+                <input id="scan-email" name="email" type="email" placeholder="naam@email.nl" required autocomplete="email" />
+              </div>
+              <div class="field">
+                <label for="scan-telefoon">Telefoon*</label>
+                <input id="scan-telefoon" name="telefoon" type="tel" placeholder="06 12345678" required autocomplete="tel" />
+              </div>
+              <button class="btn btn-green" type="submit">Verstuur aanvraag</button>
+            </form>
           </div>
-          <div class="field">
-            <label for="scan-telefoon">Telefoon*</label>
-            <input id="scan-telefoon" name="telefoon" type="tel" placeholder="06 12345678" required autocomplete="tel" />
-          </div>
-          <button class="btn btn-green" type="submit">Verstuur aanvraag</button>
-        </form>
+        </div>
       </div>
       <div data-scan-view="done" class="scan-view" hidden>
         <p class="scan-success-label">Bedankt!</p>
