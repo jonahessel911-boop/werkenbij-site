@@ -3,7 +3,7 @@ const PRODUCTS = {
     name: "Alpha ESS Smile G3-T10",
     image: "/images/products/g3-t10.png",
     intro:
-      "Krachtige 10 kW drie-fase hybride oplossing voor huishoudens met zonnepanelen en hoger verbruik. Ideaal om eigen opwek maximaal op te slaan.",
+      "Krachtige 10 kW drie-fase hybride oplossing. We zetten dit Alpha-systeem naast Huawei, Growatt en BYD — zodat jij weet of dit écht de beste match is voor jouw verbruik.",
     sizes: [
       { model: "G3-T10 + 9,6 kWh", capacity: "9,6 kWh", usage: "Geschikt tot ca. 3.500 kWh/jaar", power: "10 kW" },
       { model: "G3-T10 + 19,2 kWh", capacity: "19,2 kWh", usage: "Geschikt tot ca. 5.500 kWh/jaar", power: "10 kW" },
@@ -14,21 +14,55 @@ const PRODUCTS = {
     name: "Alpha ESS Smile G3-S5",
     image: "/images/products/g3-s5.png",
     intro:
-      "Compacte 5 kW single-phase hybride batterij voor de meeste Nederlandse woningen. Modulair uit te breiden wanneer je verbruik groeit.",
+      "Compacte 5 kW single-phase hybride batterij. Populair bij veel woningen — maar we vergelijken altijd of Growatt of Huawei in jouw geval slimmer is.",
     sizes: [
       { model: "G3-S5 + 4,8 kWh", capacity: "4,8 kWh", usage: "Geschikt tot ca. 2.500 kWh/jaar", power: "5 kW" },
       { model: "G3-S5 + 9,6 kWh", capacity: "9,6 kWh", usage: "Geschikt tot ca. 4.000 kWh/jaar", power: "5 kW" },
       { model: "G3-S5 + 19,2 kWh", capacity: "19,2 kWh", usage: "Geschikt tot ca. 6.000 kWh/jaar", power: "5 kW" },
     ],
   },
-  "g3-bat": {
-    name: "Alpha ESS Smile G3 Batterijmodule",
-    image: "/images/products/g3-bat.png",
+  "huawei-luna": {
+    name: "Huawei LUNA2000",
+    visual: "huawei",
     intro:
-      "Losse batterijmodules om je bestaande Alpha ESS-systeem uit te breiden. Plug-and-play, IP65, geschikt voor binnen en buiten.",
+      "Modulaire high-voltage batterij van Huawei. Sterk als je al Huawei-omvormers hebt, maar we kijken altijd of een ander merk scherper of beter past.",
     sizes: [
-      { model: "BAT 4,8S", capacity: "4,8 kWh", usage: "Extra buffer voor avondverbruik", power: "Modulair" },
-      { model: "BAT 9,6S", capacity: "9,6 kWh", usage: "Extra buffer voor warmtepomp / EV", power: "Modulair" },
+      { model: "LUNA2000 5 kWh", capacity: "5 kWh", usage: "Compacte buffer / starter", power: "Modulair" },
+      { model: "LUNA2000 10–15 kWh", capacity: "10–15 kWh", usage: "Geschikt tot ca. 4.500 kWh/jaar", power: "Modulair" },
+      { model: "LUNA2000 20–30 kWh", capacity: "20–30 kWh", usage: "Geschikt tot ca. 7.000+ kWh/jaar", power: "Modulair" },
+    ],
+  },
+  "growatt-apx": {
+    name: "Growatt APX HV",
+    visual: "growatt",
+    intro:
+      "Schaalbare high-voltage opslag van Growatt. Vaak interessant op prijs/prestatie — we zetten ‘m naast Alpha en BYD voordat we adviseren.",
+    sizes: [
+      { model: "APX 5 kWh", capacity: "5 kWh", usage: "Starter / avondbuffer", power: "HV" },
+      { model: "APX 10–15 kWh", capacity: "10–15 kWh", usage: "Geschikt tot ca. 4.500 kWh/jaar", power: "HV" },
+      { model: "APX 20+ kWh", capacity: "20+ kWh", usage: "Geschikt tot ca. 6.500+ kWh/jaar", power: "HV" },
+    ],
+  },
+  "byd-box": {
+    name: "BYD Battery-Box Premium",
+    visual: "byd",
+    intro:
+      "Bewezen modulaire opslag van BYD. Breed inzetbaar — wij vergelijken HV/LV-varianten met andere merken op garantie, compatibiliteit en prijs.",
+    sizes: [
+      { model: "Battery-Box HVS", capacity: "5–10 kWh", usage: "Compacte high-voltage setup", power: "HV" },
+      { model: "Battery-Box HVM", capacity: "11–22 kWh", usage: "Geschikt tot ca. 5.500 kWh/jaar", power: "HV" },
+      { model: "Battery-Box Premium+", capacity: "22+ kWh", usage: "Geschikt tot ca. 7.000+ kWh/jaar", power: "HV / LV" },
+    ],
+  },
+  "sigenergy": {
+    name: "Sigenergy SigenStor",
+    visual: "sigenergy",
+    intro:
+      "All-in-one energieopslag van Sigenergy. Interessant bij EV-laden en toekomstige uitbreiding — we wegen ‘m af tegen klassieke batterij+omvormer-combinaties.",
+    sizes: [
+      { model: "SigenStor compact", capacity: "5–10 kWh", usage: "Starter / kleinere woningen", power: "All-in-one" },
+      { model: "SigenStor mid", capacity: "10–20 kWh", usage: "Geschikt tot ca. 5.500 kWh/jaar", power: "All-in-one" },
+      { model: "SigenStor large", capacity: "20+ kWh", usage: "Geschikt tot ca. 7.000+ kWh/jaar", power: "All-in-one" },
     ],
   },
 };
@@ -499,7 +533,7 @@ function initProductModal() {
   const modal = qs("#product-modal");
   if (!modal) return;
 
-  const img = qs("[data-modal-image]", modal);
+  const mediaWrap = qs("[data-modal-media]", modal);
   const title = qs("[data-modal-title]", modal);
   const intro = qs("[data-modal-intro]", modal);
   const tableBody = qs("[data-modal-sizes]", modal);
@@ -508,8 +542,22 @@ function initProductModal() {
   function open(id) {
     const product = PRODUCTS[id];
     if (!product) return;
-    img.src = product.image;
-    img.alt = product.name;
+
+    if (mediaWrap) {
+      if (product.image) {
+        mediaWrap.innerHTML = `<img src="${product.image}" alt="${product.name}" />`;
+      } else {
+        const visual = product.visual || "default";
+        const brand = product.name.split(" ")[0];
+        const rest = product.name.slice(brand.length).trim();
+        mediaWrap.innerHTML = `
+          <div class="product-visual product-visual--${visual} product-visual--modal" aria-hidden="true">
+            <span class="product-visual-brand">${brand}</span>
+            <span class="product-visual-name">${rest}</span>
+          </div>`;
+      }
+    }
+
     title.textContent = product.name;
     intro.textContent = product.intro;
     tableBody.innerHTML = product.sizes

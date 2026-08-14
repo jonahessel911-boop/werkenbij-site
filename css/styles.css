@@ -636,6 +636,26 @@ textarea {
 }
 
 /* —— Products —— */
+.brand-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.35rem;
+}
+
+.brand-strip span {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(26, 138, 62, 0.1);
+  border: 1px solid rgba(26, 138, 62, 0.18);
+  color: var(--green-dark);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
 .product-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -656,6 +676,7 @@ textarea {
 }
 
 .product-tile figure {
+  position: relative;
   margin: 0;
   border-radius: 18px;
   overflow: hidden;
@@ -669,8 +690,77 @@ textarea {
   object-fit: cover;
 }
 
+.product-visual {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  padding: 1.25rem;
+  background:
+    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.35), transparent 45%),
+    linear-gradient(160deg, #1a5c38 0%, #0d3d24 55%, #163028 100%);
+  color: #fff;
+}
+
+.product-visual--huawei {
+  background:
+    radial-gradient(circle at 20% 15%, rgba(255, 255, 255, 0.2), transparent 40%),
+    linear-gradient(160deg, #c8102e 0%, #7a0d1c 60%, #2b0a10 100%);
+}
+
+.product-visual--growatt {
+  background:
+    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.22), transparent 42%),
+    linear-gradient(160deg, #f37021 0%, #c44f12 55%, #3d220f 100%);
+}
+
+.product-visual--byd {
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.18), transparent 40%),
+    linear-gradient(160deg, #1f4b99 0%, #123066 55%, #0b1c3a 100%);
+}
+
+.product-visual--sigenergy {
+  background:
+    radial-gradient(circle at 70% 15%, rgba(255, 255, 255, 0.2), transparent 42%),
+    linear-gradient(160deg, #0f766e 0%, #115e59 55%, #042f2e 100%);
+}
+
+.product-visual-brand {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.product-visual-name {
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 2.2vw, 1.7rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.product-visual--modal {
+  min-height: 280px;
+  border-radius: 16px;
+}
+
+.brand-tag {
+  display: inline-block;
+  margin-top: 0.85rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--orange);
+}
+
 .product-tile h3 {
-  margin: 0.9rem 0 0.25rem;
+  margin: 0.25rem 0 0.25rem;
   font-family: var(--font-display);
   font-size: 1.15rem;
   color: var(--green-deep);
@@ -687,6 +777,14 @@ textarea {
   flex-wrap: wrap;
   gap: 0.4rem;
   margin-top: 0.7rem;
+}
+
+.product-footnote {
+  margin: 2rem 0 0;
+  max-width: 62ch;
+  color: var(--ink-muted);
+  font-size: 0.95rem;
+  line-height: 1.55;
 }
 
 .chip {
@@ -756,6 +854,16 @@ textarea {
   width: 100%;
   border-radius: 14px;
   background: var(--wash);
+}
+
+.modal-media {
+  min-height: 220px;
+}
+
+.modal-media .product-visual {
+  border-radius: 14px;
+  aspect-ratio: 1;
+  min-height: 0;
 }
 
 .modal-layout h2 {
@@ -1419,10 +1527,13 @@ textarea {
   .why-grid,
   .contact-grid,
   .pillars,
-  .product-row,
   .footer-grid,
   .modal-layout {
     grid-template-columns: 1fr;
+  }
+
+  .product-row {
+    grid-template-columns: 1fr 1fr;
   }
 
   .hero-brand {
@@ -1501,6 +1612,10 @@ textarea {
   .form-row.cols-2,
   .form-row.cols-3,
   .footer-scan-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .product-row {
     grid-template-columns: 1fr;
   }
 
