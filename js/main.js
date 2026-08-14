@@ -23,7 +23,7 @@ const PRODUCTS = {
   },
   "huawei-luna": {
     name: "Huawei LUNA2000",
-    visual: "huawei",
+    image: "/images/products/huawei-luna.png",
     intro:
       "Modulaire high-voltage batterij van Huawei. Sterk als je al Huawei-omvormers hebt, maar we kijken altijd of een ander merk scherper of beter past.",
     sizes: [
@@ -34,7 +34,7 @@ const PRODUCTS = {
   },
   "growatt-apx": {
     name: "Growatt APX HV",
-    visual: "growatt",
+    image: "/images/products/growatt-apx.png",
     intro:
       "Schaalbare high-voltage opslag van Growatt. Vaak interessant op prijs/prestatie — we zetten ‘m naast Alpha en BYD voordat we adviseren.",
     sizes: [
@@ -45,7 +45,7 @@ const PRODUCTS = {
   },
   "byd-box": {
     name: "BYD Battery-Box Premium",
-    visual: "byd",
+    image: "/images/products/byd-box.png",
     intro:
       "Bewezen modulaire opslag van BYD. Breed inzetbaar — wij vergelijken HV/LV-varianten met andere merken op garantie, compatibiliteit en prijs.",
     sizes: [
@@ -56,7 +56,7 @@ const PRODUCTS = {
   },
   "sigenergy": {
     name: "Sigenergy SigenStor",
-    visual: "sigenergy",
+    image: "/images/products/sigenergy.png",
     intro:
       "All-in-one energieopslag van Sigenergy. Interessant bij EV-laden en toekomstige uitbreiding — we wegen ‘m af tegen klassieke batterij+omvormer-combinaties.",
     sizes: [
