@@ -11,6 +11,7 @@
     { "source": "/over-ons.html", "destination": "/over-ons", "permanent": true },
     { "source": "/contact.html", "destination": "/contact", "permanent": true },
     { "source": "/vrienden-van-vrienden.html", "destination": "/vrienden-van-vrienden", "permanent": true },
-    { "source": "/service.html", "destination": "/service", "permanent": true }
+    { "source": "/service.html", "destination": "/service", "permanent": true },
+    { "source": "/vacatures.html", "destination": "/vacatures", "permanent": true }
   ]
 }

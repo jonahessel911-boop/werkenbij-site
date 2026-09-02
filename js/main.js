@@ -73,17 +73,124 @@ function formatPostcodeDisplay(value) {
   return raw;
 }
 
-function getUtmSource(fallback = "website") {
+const ATTRIBUTION_STORAGE_KEY = "bc_lead_attribution";
+
+function readUrlParam(params, ...keys) {
+  for (const key of keys) {
+    const value = params.get(key);
+    if (value?.trim()) return value.trim();
+  }
+  return "";
+}
+
+function getStoredAttribution() {
+  try {
+    const raw = sessionStorage.getItem(ATTRIBUTION_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function storeAttribution(patch) {
+  try {
+    const current = getStoredAttribution();
+    const next = { ...current };
+    for (const [key, value] of Object.entries(patch)) {
+      if (typeof value === "string" && value.trim()) next[key] = value.trim();
+    }
+    if (Object.keys(next).length > 0) {
+      sessionStorage.setItem(ATTRIBUTION_STORAGE_KEY, JSON.stringify(next));
+    }
+    return next;
+  } catch {
+    return patch;
+  }
+}
+
+function captureAttributionFromUrl() {
   try {
     const params = new URLSearchParams(window.location.search);
-    return params.get("utm_source") || fallback;
+    return storeAttribution({
+      utm_source: readUrlParam(params, "utm_source"),
+      utm_medium: readUrlParam(params, "utm_medium"),
+      utm_campaign: readUrlParam(params, "utm_campaign"),
+      utm_content: readUrlParam(params, "utm_content"),
+      utm_term: readUrlParam(params, "utm_term"),
+      campaign_name: readUrlParam(
+        params,
+        "campaign_name",
+        "Campaign_name",
+        "campaign"
+      ),
+      ad_name: readUrlParam(params, "ad_name", "Ad_name", "ad"),
+      lander: readUrlParam(params, "lander", "Lander"),
+    });
   } catch {
-    return fallback;
+    return getStoredAttribution();
   }
+}
+
+function getLeadAttribution(defaultSource = "website") {
+  const stored = captureAttributionFromUrl();
+  const attribution = { ...stored };
+  if (!attribution.utm_source) attribution.utm_source = defaultSource;
+  return Object.fromEntries(
+    Object.entries(attribution).filter(([, value]) => Boolean(value))
+  );
+}
+
+function getUtmSource(fallback = "website") {
+  return getLeadAttribution(fallback).utm_source || fallback;
 }
 
 async function submitLead(payload) {
   const res = await fetch("/api/leads", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({
+      ...getLeadAttribution(),
+      ...payload,
+    }),
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error || data.message || "Lead versturen mislukt.");
+  }
+  return data;
+}
+
+async function submitSollicitatie(form, vacature) {
+  const fd = new FormData(form);
+  const cv = fd.get("cv");
+  const cvNaam = cv instanceof File && cv.size > 0 ? cv.name : "";
+  const rijbewijs = fd.get("rijbewijs") ? "Ja" : "Nee";
+
+  const payload = {
+    naam: String(fd.get("naam") || "").trim(),
+    email: String(fd.get("email") || "").trim(),
+    telefoon: String(fd.get("telefoon") || "").trim(),
+    woonplaats: String(fd.get("woonplaats") || "").trim(),
+    ervaring: String(fd.get("ervaring") || "").trim(),
+    vacature,
+    notitie: [
+      `Vacature: ${vacature}`,
+      `Woonplaats: ${String(fd.get("woonplaats") || "").trim()}`,
+      `Jaar ervaring in sales: ${String(fd.get("ervaring") || "").trim()}`,
+      `Rijbewijs: ${rijbewijs}`,
+      cvNaam ? `CV: ${cvNaam}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+    bron: "werkenbij-formulier",
+    cv: cvNaam || undefined,
+  };
+
+  const res = await fetch("/api/sollicitaties", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -94,7 +201,7 @@ async function submitLead(payload) {
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.error || data.message || "Lead versturen mislukt.");
+    throw new Error(data.error || data.message || "Sollicitatie versturen mislukt.");
   }
   return data;
 }
@@ -348,6 +455,12 @@ async function runScan(form) {
   const title = qs("[data-scan-title]");
   if (title) title.textContent = `Situatie bekijken voor ${previewLabel}`;
 
+  const loadingText = qs(".scan-loading-text", modal);
+  if (loadingText) loadingText.textContent = "Adresgegevens ophalen en mogelijkheden checken…";
+
+  const started = Date.now();
+  const minLoadingMs = 5000;
+
   try {
     const address = await fetchAddress(postcode, number);
     const streetLine = formatAddressLine(address);
@@ -363,10 +476,17 @@ async function runScan(form) {
     if (resultHeading) resultHeading.textContent = `Situatie bekijken voor ${streetLine}`;
     if (title) title.textContent = `Situatie bekijken voor ${streetLine}`;
 
-    await new Promise((r) => setTimeout(r, 450));
+    const remaining = Math.max(0, minLoadingMs - (Date.now() - started));
+    if (remaining > 0) {
+      if (loadingText) loadingText.textContent = "Situatie analyseren…";
+      await new Promise((r) => setTimeout(r, remaining));
+    }
+
     setScanView("result");
     form.reset();
   } catch (err) {
+    const remaining = Math.max(0, Math.min(1200, minLoadingMs - (Date.now() - started)));
+    if (remaining > 0) await new Promise((r) => setTimeout(r, remaining));
     qs("[data-scan-error]").textContent =
       err.message || "Controleer postcode, huisnummer en eventuele toevoeging.";
     setScanView("error");
@@ -527,6 +647,54 @@ function initForms() {
       }
     }
   });
+
+  qsa("[data-vacature-form]").forEach((vacatureForm) => {
+    vacatureForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const submitBtn = qs('button[type="submit"]', vacatureForm);
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Versturen…";
+      }
+
+      try {
+        const vacature = String(vacatureForm.dataset.vacatureType || "Vacature").trim();
+        await submitSollicitatie(vacatureForm, vacature);
+        showToast("Sollicitatie verzonden. We nemen snel contact op.");
+        vacatureForm.reset();
+      } catch (err) {
+        showToast(err.message || "Verzenden mislukt. Probeer opnieuw.");
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Verzenden";
+        }
+      }
+    });
+  });
+}
+
+function initVacatureTabs() {
+  const tabs = qsa("[data-vacature-tab]");
+  const panels = qsa("[data-vacature-panel]");
+  if (!tabs.length || !panels.length) return;
+
+  function activate(name) {
+    tabs.forEach((tab) => {
+      const active = tab.dataset.vacatureTab === name;
+      tab.classList.toggle("active", active);
+      tab.setAttribute("aria-selected", active ? "true" : "false");
+    });
+    panels.forEach((panel) => {
+      const active = panel.dataset.vacaturePanel === name;
+      panel.classList.toggle("active", active);
+      panel.hidden = !active;
+    });
+  }
+
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => activate(tab.dataset.vacatureTab));
+  });
 }
 
 function initProductModal() {
@@ -612,6 +780,7 @@ function initWhatsAppButton() {
 document.addEventListener("DOMContentLoaded", () => {
   initNav();
   initForms();
+  initVacatureTabs();
   initProductModal();
   initWhatsAppButton();
 

@@ -9,10 +9,75 @@ function postcodeProxyPlugin(token) {
     "/contact",
     "/vrienden-van-vrienden",
     "/service",
+    "/vacatures",
   ]);
 
   const handler = async (req, res, next) => {
     const url = new URL(req.url, "http://localhost");
+
+    if (url.pathname.endsWith("/api/sollicitaties") || url.pathname === "/api/sollicitaties") {
+      if (req.method !== "POST") {
+        res.statusCode = 405;
+        res.setHeader("Content-Type", "application/json; charset=utf-8");
+        res.end(JSON.stringify({ error: "Method not allowed" }));
+        return;
+      }
+
+      let body = "";
+      req.on("data", (chunk) => {
+        body += chunk;
+      });
+      req.on("end", async () => {
+        try {
+          const parsed = JSON.parse(body || "{}");
+          const sollicitatiePayload = {
+            naam: parsed.naam,
+            email: parsed.email,
+            telefoon: parsed.telefoon,
+            notitie: parsed.notitie,
+            bron: parsed.bron || "werkenbij-formulier",
+          };
+
+          let upstream = await fetch("https://platform.batterijconcept.nl/api/webhook/sollicitaties", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify(sollicitatiePayload),
+          });
+
+          if (upstream.status === 404) {
+            upstream = await fetch("https://platform.batterijconcept.nl/api/webhook/leads", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+              body: JSON.stringify({
+                naam: parsed.naam,
+                email: parsed.email,
+                telefoon: parsed.telefoon,
+                woonplaats: parsed.woonplaats || "",
+                utm_source: parsed.bron || "werkenbij-formulier",
+                onderwerp: `Sollicitatie - ${parsed.vacature || "Vacature"}`,
+                omschrijving: parsed.notitie,
+              }),
+            });
+          }
+
+          const text = await upstream.text();
+          res.statusCode = upstream.status;
+          res.setHeader("Content-Type", "application/json; charset=utf-8");
+          res.end(text);
+        } catch {
+          res.statusCode = 502;
+          res.setHeader("Content-Type", "application/json; charset=utf-8");
+          res.end(JSON.stringify({ error: "Sollicitatie-webhook tijdelijk niet bereikbaar." }));
+        }
+      });
+      return;
+    }
 
     if (url.pathname.endsWith("/api/service-verzoeken") || url.pathname === "/api/service-verzoeken") {
       if (req.method !== "POST") {
@@ -146,6 +211,7 @@ export default defineConfig(({ mode }) => {
           contact: resolve(__dirname, "contact.html"),
           vrienden: resolve(__dirname, "vrienden-van-vrienden.html"),
           service: resolve(__dirname, "service.html"),
+          vacatures: resolve(__dirname, "vacatures.html"),
         },
       },
     },
