@@ -111,7 +111,8 @@ function storeAttribution(patch) {
 function captureAttributionFromUrl() {
   try {
     const params = new URLSearchParams(window.location.search);
-    return storeAttribution({
+    const fbclid = readUrlParam(params, "fbclid");
+    const patch = {
       utm_source: readUrlParam(params, "utm_source"),
       utm_medium: readUrlParam(params, "utm_medium"),
       utm_campaign: readUrlParam(params, "utm_campaign"),
@@ -125,10 +126,62 @@ function captureAttributionFromUrl() {
       ),
       ad_name: readUrlParam(params, "ad_name", "Ad_name", "ad"),
       lander: readUrlParam(params, "lander", "Lander"),
-    });
+      fbclid,
+    };
+
+    if (fbclid) {
+      const existingFbc = getCookie("_fbc");
+      const fbc =
+        existingFbc && existingFbc.includes(fbclid)
+          ? existingFbc
+          : `fb.1.${Date.now()}.${fbclid}`;
+      setCookie("_fbc", fbc, 90);
+      patch.fbc = fbc;
+    }
+
+    return storeAttribution(patch);
   } catch {
     return getStoredAttribution();
   }
+}
+
+function getCookie(name) {
+  try {
+    const match = document.cookie.match(new RegExp(`(?:^|; )${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}=([^;]*)`));
+    return match ? decodeURIComponent(match[1]) : "";
+  } catch {
+    return "";
+  }
+}
+
+function setCookie(name, value, days = 90) {
+  try {
+    const maxAge = Math.floor(days * 24 * 60 * 60);
+    document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+  } catch {
+    /* ignore */
+  }
+}
+
+function newEventId() {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+  return `bc_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+/** Meta CAPI / Pixel matching: fbc (click id), fbp (browser id) */
+function getMetaTracking() {
+  captureAttributionFromUrl();
+  const stored = getStoredAttribution();
+  const fbc = getCookie("_fbc") || stored.fbc || "";
+  const fbp = getCookie("_fbp") || stored.fbp || "";
+  return {
+    fbc: fbc || undefined,
+    fbp: fbp || undefined,
+    fbclid: stored.fbclid || undefined,
+    event_source_url: window.location.href,
+    client_user_agent: navigator.userAgent,
+    event_id: newEventId(),
+  };
 }
 
 function getLeadAttribution(defaultSource = "website") {
@@ -153,6 +206,7 @@ async function submitLead(payload) {
     },
     body: JSON.stringify({
       ...getLeadAttribution(),
+      ...getMetaTracking(),
       ...payload,
     }),
   });
@@ -176,9 +230,10 @@ async function submitSollicitatie(form, vacature) {
     telefoon: String(fd.get("telefoon") || "").trim(),
     woonplaats: String(fd.get("woonplaats") || "").trim(),
     ervaring: String(fd.get("ervaring") || "").trim(),
+    functie: vacature,
     vacature,
     notitie: [
-      `Vacature: ${vacature}`,
+      `Functie: ${vacature}`,
       `Woonplaats: ${String(fd.get("woonplaats") || "").trim()}`,
       `Jaar ervaring in sales: ${String(fd.get("ervaring") || "").trim()}`,
       `Rijbewijs: ${rijbewijs}`,
@@ -188,6 +243,7 @@ async function submitSollicitatie(form, vacature) {
       .join("\n"),
     bron: "werkenbij-formulier",
     cv: cvNaam || undefined,
+    ...getMetaTracking(),
   };
 
   const res = await fetch("/api/sollicitaties", {
@@ -674,6 +730,199 @@ function initForms() {
   });
 }
 
+function initSalesQuiz() {
+  const root = qs("[data-sales-quiz]");
+  if (!root) return;
+
+  const answers = {
+    markt: "",
+    fulltime: "",
+    leeftijd: "",
+    ervaring: "",
+    rijbewijs: "",
+  };
+
+  let step = 1;
+  const progress = qs("[data-quiz-progress]", root);
+  const form = qs("[data-quiz-form]", root);
+
+  function updateProgress() {
+    qsa("[data-dot]", root).forEach((dot) => {
+      const n = Number(dot.dataset.dot);
+      dot.classList.toggle("is-done", n < step);
+      dot.classList.toggle("is-current", n === step);
+    });
+  }
+
+  function showStep(next) {
+    step = next;
+    qsa("[data-quiz-step]", root).forEach((el) => {
+      const id = el.dataset.quizStep;
+      const active = String(id) === String(next);
+      el.hidden = !active;
+      el.classList.toggle("is-active", active);
+    });
+    if (progress) progress.setAttribute("aria-hidden", step === 1 && !root.classList.contains("is-fullscreen") ? "true" : "false");
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function enterFullscreen() {
+    root.classList.add("is-fullscreen");
+  }
+
+  function showResult(qualified) {
+    const icon = qs("[data-result-icon]", root);
+    const title = qs("[data-result-title]", root);
+    const text = qs("[data-result-text]", root);
+    const qualifiedBox = qs("[data-result-qualified]", root);
+    const noActions = qs("[data-result-no]", root);
+
+    if (icon) {
+      icon.classList.toggle("is-no", !qualified);
+      icon.textContent = qualified ? "✓" : "–";
+    }
+    if (title) {
+      title.textContent = qualified
+        ? "Gefeliciteerd!"
+        : "Op dit moment niet de beste match";
+    }
+    if (text) {
+      text.textContent = qualified
+        ? "Je komt waarschijnlijk in aanmerking om te starten met deze ZZP-functie."
+        : "Bedankt voor je interesse. Voor deze rol zoeken we iemand die full-time wil groeien naar minimaal €10k per maand. Twijfel je toch? Mail gerust naar info@batterijconcept.nl.";
+    }
+    if (qualifiedBox) qualifiedBox.hidden = !qualified;
+    if (noActions) noActions.hidden = qualified;
+    showStep("result");
+  }
+
+  root.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-answer]");
+    if (!btn || !root.contains(btn)) return;
+
+    const activeStep = qs(".sales-quiz-step.is-active", root);
+    const stepId = Number(activeStep?.dataset.quizStep);
+    const value = btn.dataset.answer || "";
+
+    if (stepId === 1) {
+      answers.markt = value;
+      enterFullscreen();
+      showStep(2);
+      return;
+    }
+    if (stepId === 2) {
+      answers.fulltime = value;
+      showStep(3);
+      return;
+    }
+    if (stepId === 4) {
+      answers.ervaring = value;
+      showStep(5);
+      return;
+    }
+    if (stepId === 5) {
+      answers.rijbewijs = value;
+      showStep(6);
+    }
+  });
+
+  const continueBtn = qs("[data-continue]", root);
+  const ageInput = qs("#quiz-leeftijd", root);
+  continueBtn?.addEventListener("click", () => {
+    const age = String(ageInput?.value || "").trim();
+    if (!age || Number(age) < 16 || Number(age) > 99) {
+      ageInput?.focus();
+      showToast("Vul een geldige leeftijd in.");
+      return;
+    }
+    answers.leeftijd = age;
+    showStep(4);
+  });
+
+  ageInput?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      continueBtn?.click();
+    }
+  });
+
+  form?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const voornaam = String(fd.get("voornaam") || "").trim();
+    const achternaam = String(fd.get("achternaam") || "").trim();
+    const email = String(fd.get("email") || "").trim();
+    const telefoon = String(fd.get("telefoon") || "").trim();
+
+    if (!voornaam || !achternaam || !email || !telefoon) {
+      showToast("Vul alle velden in.");
+      return;
+    }
+
+    const submitBtn = qs('button[type="submit"]', form);
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Even geduld…";
+    }
+
+    const qualified = answers.fulltime === "Ja";
+    const naam = `${voornaam} ${achternaam}`.trim();
+    const functie = "ZZP sales verkoper";
+    const notitie = [
+      `Vraag: We verkopen thuisbatterijen. Ken je deze markt al?`,
+      `Antwoord: ${answers.markt}`,
+      ``,
+      `Vraag: We zoeken mensen die full-time aan de slag willen, en minimaal €10k per maand willen verdienen. Ben jij dat?`,
+      `Antwoord: ${answers.fulltime}`,
+      ``,
+      `Vraag: Hoe oud ben je?`,
+      `Antwoord: ${answers.leeftijd}`,
+      ``,
+      `Vraag: Heb je al ervaring in de verduurzamingsmarkt?`,
+      `Antwoord: ${answers.ervaring}`,
+      ``,
+      `Vraag: Heb je rijbewijs B?`,
+      `Antwoord: ${answers.rijbewijs}`,
+      ``,
+      `Uitslag: ${qualified ? "In aanmerking" : "Geen match"}`,
+    ].join("\n");
+
+    try {
+      const res = await fetch("/api/sollicitaties", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          naam,
+          email,
+          telefoon,
+          functie,
+          vacature: functie,
+          notitie,
+          bron: "sales-vacature-quiz",
+          ...getMetaTracking(),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || data.message || "Versturen mislukt.");
+      }
+      showResult(qualified);
+    } catch (err) {
+      showToast(err.message || "Versturen mislukt. Probeer opnieuw.");
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Bekijk uitslag <span aria-hidden="true">→</span>';
+      }
+    }
+  });
+
+  updateProgress();
+}
+
 function initVacatureTabs() {
   const tabs = qsa("[data-vacature-tab]");
   const panels = qsa("[data-vacature-panel]");
@@ -760,6 +1009,7 @@ function initProductModal() {
 
 function initWhatsAppButton() {
   if (qs(".whatsapp-fab")) return;
+  if (document.body.classList.contains("sales-quiz-body")) return;
 
   const link = document.createElement("a");
   link.className = "whatsapp-fab";
@@ -778,9 +1028,11 @@ function initWhatsAppButton() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  captureAttributionFromUrl();
   initNav();
   initForms();
   initVacatureTabs();
+  initSalesQuiz();
   initProductModal();
   initWhatsAppButton();
 

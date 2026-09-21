@@ -1,11 +1,14 @@
+import { trackMetaLeadSafe } from "../lib/meta-capi.js";
+
 const SOLLICITATIES_WEBHOOK_URL = "https://platform.batterijconcept.nl/api/webhook/sollicitaties";
 const LEADS_WEBHOOK_URL = "https://platform.batterijconcept.nl/api/webhook/leads";
 
 function buildSollicitatiePayload(body) {
+  const functie = body.functie || body.vacature || "";
   const notitie =
     body.notitie ||
     [
-      body.vacature ? `Vacature: ${body.vacature}` : "",
+      functie ? `Functie: ${functie}` : "",
       body.woonplaats ? `Woonplaats: ${body.woonplaats}` : "",
       body.ervaring ? `Jaar ervaring in sales: ${body.ervaring}` : "",
       body.cv ? `CV: ${body.cv}` : "",
@@ -17,6 +20,7 @@ function buildSollicitatiePayload(body) {
     naam: body.naam,
     email: body.email,
     telefoon: body.telefoon,
+    functie,
     notitie,
     bron: body.bron || "werkenbij-formulier",
   };
@@ -80,6 +84,20 @@ export default async function handler(req, res) {
       });
       return;
     }
+
+    trackMetaLeadSafe(
+      {
+        email: body.email,
+        phone: body.telefoon || body.phone,
+        fbc: body.fbc,
+        fbp: body.fbp,
+        eventSourceUrl: body.event_source_url || body.eventSourceUrl,
+        clientUserAgent: body.client_user_agent || body.userAgent,
+        eventId: body.event_id || body.eventId,
+        contentName: body.vacature || body.bron || "sollicitatie",
+      },
+      req
+    ).catch(() => {});
 
     res.status(upstream.status).json(data);
   } catch {

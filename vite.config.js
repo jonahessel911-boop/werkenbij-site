@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from "vite";
 import { resolve } from "node:path";
+import { trackMetaLeadSafe } from "./lib/meta-capi.js";
 
 function postcodeProxyPlugin(token) {
   const pages = new Set([
@@ -11,6 +12,7 @@ function postcodeProxyPlugin(token) {
     "/service",
     "/vacatures",
     "/algemene-voorwaarden",
+    "/sales-vacature",
   ]);
 
   const handler = async (req, res, next) => {
@@ -35,6 +37,7 @@ function postcodeProxyPlugin(token) {
             naam: parsed.naam,
             email: parsed.email,
             telefoon: parsed.telefoon,
+            functie: parsed.functie || parsed.vacature || "",
             notitie: parsed.notitie,
             bron: parsed.bron || "werkenbij-formulier",
           };
@@ -68,6 +71,21 @@ function postcodeProxyPlugin(token) {
           }
 
           const text = await upstream.text();
+          if (upstream.ok) {
+            trackMetaLeadSafe(
+              {
+                email: parsed.email,
+                phone: parsed.telefoon,
+                fbc: parsed.fbc,
+                fbp: parsed.fbp,
+                eventSourceUrl: parsed.event_source_url,
+                clientUserAgent: parsed.client_user_agent || req.headers["user-agent"],
+                eventId: parsed.event_id,
+                contentName: parsed.vacature || parsed.bron || "sollicitatie",
+              },
+              req
+            ).catch(() => {});
+          }
           res.statusCode = upstream.status;
           res.setHeader("Content-Type", "application/json; charset=utf-8");
           res.end(text);
@@ -129,6 +147,7 @@ function postcodeProxyPlugin(token) {
       });
       req.on("end", async () => {
         try {
+          const parsed = JSON.parse(body || "{}");
           const upstream = await fetch("https://platform.batterijconcept.nl/api/webhook/leads", {
             method: "POST",
             headers: {
@@ -138,6 +157,21 @@ function postcodeProxyPlugin(token) {
             body,
           });
           const text = await upstream.text();
+          if (upstream.ok) {
+            trackMetaLeadSafe(
+              {
+                email: parsed.email,
+                phone: parsed.telefoon || parsed.phone,
+                fbc: parsed.fbc,
+                fbp: parsed.fbp,
+                eventSourceUrl: parsed.event_source_url,
+                clientUserAgent: parsed.client_user_agent || req.headers["user-agent"],
+                eventId: parsed.event_id,
+                contentName: parsed.utm_source || parsed.bron || "website-lead",
+              },
+              req
+            ).catch(() => {});
+          }
           res.statusCode = upstream.status;
           res.setHeader("Content-Type", "application/json; charset=utf-8");
           res.end(text);
@@ -214,6 +248,7 @@ export default defineConfig(({ mode }) => {
           service: resolve(__dirname, "service.html"),
           vacatures: resolve(__dirname, "vacatures.html"),
           voorwaarden: resolve(__dirname, "algemene-voorwaarden.html"),
+          salesVacature: resolve(__dirname, "sales-vacature.html"),
         },
       },
     },

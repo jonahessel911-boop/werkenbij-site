@@ -1702,3 +1702,414 @@ textarea {
     padding: 1.2rem 1rem;
   }
 }
+
+/* —— Sales vacature quiz —— */
+.sales-quiz-body {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(26, 138, 62, 0.12), transparent 55%),
+    var(--wash);
+  min-height: 100vh;
+}
+
+.sales-quiz-page {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 1.25rem 1.15rem 3rem;
+}
+
+.sales-quiz-top {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.sales-quiz-top .logo img {
+  height: 40px;
+}
+
+.sales-quiz-intro {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.sales-quiz-kicker {
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--green);
+}
+
+.sales-quiz-intro h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 4.5vw, 1.75rem);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+.sales-quiz-lead {
+  margin: 0.75rem 0 0;
+  color: var(--ink-muted);
+  font-size: 0.95rem;
+}
+
+.sales-quiz-shell {
+  transition: none;
+}
+
+.sales-quiz-card {
+  background: var(--surface);
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.sales-quiz-banner {
+  position: relative;
+  background: var(--charcoal);
+  color: #fff;
+  text-align: center;
+  padding: 1rem 1.25rem 1.35rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.sales-quiz-banner-arrow {
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid var(--charcoal);
+}
+
+.sales-quiz-progress {
+  display: none;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 1.35rem 1rem 0.25rem;
+}
+
+.sales-quiz-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: #e6ebe8;
+  color: var(--ink-muted);
+}
+
+.sales-quiz-dot::before {
+  content: attr(data-dot);
+}
+
+.sales-quiz-dot.is-done {
+  background: var(--green);
+  color: #fff;
+}
+
+.sales-quiz-dot.is-done::before {
+  content: "✓";
+}
+
+.sales-quiz-dot.is-current {
+  background: var(--green-dark);
+  color: #fff;
+}
+
+.sales-quiz-step {
+  padding: 1.5rem 1.35rem 1.6rem;
+}
+
+.sales-quiz-question {
+  margin: 0 0 1.15rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.15rem, 3.8vw, 1.35rem);
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+  color: var(--ink);
+}
+
+.sales-quiz-step-sub {
+  margin: -0.65rem 0 1.1rem;
+  text-align: center;
+  color: var(--ink-muted);
+  font-size: 0.92rem;
+}
+
+.sales-quiz-options {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.sales-quiz-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.95rem 1.2rem;
+  background: var(--green);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.12s ease;
+}
+
+.sales-quiz-option:hover {
+  background: var(--green-dark);
+}
+
+.sales-quiz-option:active {
+  transform: scale(0.985);
+}
+
+.sales-quiz-option span {
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.sales-quiz-continue,
+.sales-quiz-submit {
+  margin-top: 0.85rem;
+}
+
+.sales-quiz-hint {
+  margin: 1.1rem 0 0;
+  text-align: center;
+  color: var(--ink-muted);
+  font-size: 0.82rem;
+}
+
+.sales-quiz-field {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 0.25rem;
+}
+
+.sales-quiz-field label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.sales-quiz-field input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  font: inherit;
+  color: var(--ink);
+  background: #fff;
+}
+
+.sales-quiz-field input:focus {
+  outline: none;
+  border-color: var(--green);
+}
+
+.sales-quiz-form .field {
+  margin-bottom: 0.75rem;
+}
+
+.sales-quiz-form .form-row {
+  margin-bottom: 0;
+}
+
+.sales-quiz-result {
+  text-align: center;
+}
+
+.sales-quiz-result-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0.25rem auto 1rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--green-soft);
+  color: var(--green-dark);
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.sales-quiz-result-icon.is-no {
+  background: #f3f0ee;
+  color: var(--ink-muted);
+}
+
+.sales-quiz-result-text {
+  margin: 0 0 1.25rem;
+  color: var(--ink);
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.sales-quiz-result-box {
+  text-align: center;
+  background: var(--green-soft);
+  border: 1px solid #cfe9d7;
+  border-radius: 16px;
+  padding: 1.25rem 1.15rem 1.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.sales-quiz-result-box p {
+  margin: 0;
+  color: var(--ink);
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.sales-quiz-phone {
+  display: inline-block;
+  margin: 0.85rem 0 1rem;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--green-dark);
+  text-decoration: none;
+}
+
+.sales-quiz-phone:hover {
+  text-decoration: underline;
+}
+
+.sales-quiz-result-nudge {
+  margin: 0 0 1rem !important;
+  color: var(--ink-muted) !important;
+  font-size: 0.92rem !important;
+}
+
+.sales-quiz-whatsapp {
+  background: #1fa855;
+}
+
+.sales-quiz-whatsapp:hover {
+  background: #189447;
+}
+
+.sales-quiz-result-actions {
+  margin-top: 0.5rem;
+}
+
+.sales-quiz-benefits {
+  margin-top: 1.5rem;
+}
+
+.sales-quiz-benefits-card {
+  background: var(--surface);
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  padding: 1.35rem 1.35rem 0.5rem;
+}
+
+.sales-quiz-benefits-card h2 {
+  margin: 0 0 0.85rem;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--ink);
+}
+
+.sales-quiz-benefits-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sales-quiz-benefits-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--line);
+  color: var(--ink);
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.sales-quiz-benefits-list li::before {
+  content: "✓";
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  margin-top: 0.05rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--green);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+/* Fullscreen after first answer */
+.sales-quiz-page.is-fullscreen {
+  max-width: none;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--wash);
+}
+
+.sales-quiz-page.is-fullscreen .sales-quiz-intro,
+.sales-quiz-page.is-fullscreen .sales-quiz-benefits,
+.sales-quiz-page.is-fullscreen .sales-quiz-banner {
+  display: none;
+}
+
+.sales-quiz-page.is-fullscreen .sales-quiz-top {
+  margin: 0;
+  padding: 1rem 1.15rem 0.5rem;
+  background: var(--wash);
+}
+
+.sales-quiz-page.is-fullscreen .sales-quiz-shell {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1.15rem 2rem;
+  background: var(--wash);
+}
+
+.sales-quiz-page.is-fullscreen .sales-quiz-card {
+  width: min(440px, 100%);
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.sales-quiz-page.is-fullscreen .sales-quiz-progress {
+  display: flex;
+}
+
+.sales-quiz-page.is-fullscreen .sales-quiz-step {
+  padding: 1rem 0 1.5rem;
+}
+
+@media (max-width: 480px) {
+  .sales-quiz-page.is-fullscreen .sales-quiz-shell {
+    align-items: flex-start;
+    padding-top: 1.5rem;
+  }
+}

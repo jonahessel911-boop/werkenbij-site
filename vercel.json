@@ -13,6 +13,7 @@
     { "source": "/vrienden-van-vrienden.html", "destination": "/vrienden-van-vrienden", "permanent": true },
     { "source": "/service.html", "destination": "/service", "permanent": true },
     { "source": "/vacatures.html", "destination": "/vacatures", "permanent": true },
-    { "source": "/algemene-voorwaarden.html", "destination": "/algemene-voorwaarden", "permanent": true }
+    { "source": "/algemene-voorwaarden.html", "destination": "/algemene-voorwaarden", "permanent": true },
+    { "source": "/sales-vacature.html", "destination": "/sales-vacature", "permanent": true }
   ]
 }
