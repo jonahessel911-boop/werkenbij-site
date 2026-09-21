@@ -10,6 +10,7 @@ function postcodeProxyPlugin(token) {
     "/vrienden-van-vrienden",
     "/service",
     "/vacatures",
+    "/algemene-voorwaarden",
   ]);
 
   const handler = async (req, res, next) => {
@@ -212,6 +213,7 @@ export default defineConfig(({ mode }) => {
           vrienden: resolve(__dirname, "vrienden-van-vrienden.html"),
           service: resolve(__dirname, "service.html"),
           vacatures: resolve(__dirname, "vacatures.html"),
+          voorwaarden: resolve(__dirname, "algemene-voorwaarden.html"),
         },
       },
     },
