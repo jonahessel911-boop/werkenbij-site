@@ -300,7 +300,7 @@ async function submitSollicitatie(form, vacature) {
     notitie: [
       `Functie: ${vacature}`,
       `Woonplaats: ${String(fd.get("woonplaats") || "").trim()}`,
-      `Jaar ervaring in sales: ${String(fd.get("ervaring") || "").trim()}`,
+      `Jaren ervaring: ${String(fd.get("ervaring") || "").trim()}`,
       `Rijbewijs: ${rijbewijs}`,
       cvNaam ? `CV: ${cvNaam}` : "",
     ]
@@ -1101,26 +1101,377 @@ function initSalesQuiz() {
   updateProgress();
 }
 
-function initVacatureTabs() {
-  const tabs = qsa("[data-vacature-tab]");
-  const panels = qsa("[data-vacature-panel]");
-  if (!tabs.length || !panels.length) return;
+const PROVINCIES = [
+  "Drenthe",
+  "Flevoland",
+  "Friesland",
+  "Gelderland",
+  "Groningen",
+  "Limburg",
+  "Noord-Brabant",
+  "Noord-Holland",
+  "Overijssel",
+  "Utrecht",
+  "Zeeland",
+  "Zuid-Holland",
+];
 
-  function activate(name) {
-    tabs.forEach((tab) => {
-      const active = tab.dataset.vacatureTab === name;
-      tab.classList.toggle("active", active);
-      tab.setAttribute("aria-selected", active ? "true" : "false");
-    });
-    panels.forEach((panel) => {
-      const active = panel.dataset.vacaturePanel === name;
-      panel.classList.toggle("active", active);
-      panel.hidden = !active;
+const VACATURE_CONTENT = {
+  adviseur: {
+    typeLabel: "Adviseur Nederland",
+    tag: "Vacature",
+    afdeling: "Sales & advies · buitendienst",
+    uren: "Fulltime · ZZP",
+    salaris: "Verdiensten tot €10.000 per maand",
+    niveau: "Mbo+/Hbo · commercieel",
+    contract: "ZZP-overeenkomst",
+    deadline: "Solliciteer voor 31 december 2026",
+    snipper:
+      "Als Adviseur Nederland help je huiseigenaren verduurzamen met thuisbatterijen. Warme afspraken, een sterk product en hoge upside.",
+    body: `
+      <p>Bij Batterijconcept verkoop en adviseer je een sterk en duurzaam product in een markt die hard groeit. Je werkt in de buitendienst, spreekt dagelijks met huiseigenaren die serieus willen verduurzamen en helpt hen bij een keuze die echt impact maakt op hun energierekening en toekomst.</p>
+      <p>Voor professionals met discipline en commerciële drive ligt er een aantrekkelijk verdienmodel klaar. Door de combinatie van kwalitatieve aanvragen, een goed product en een helder proces kun je met sterke prestaties doorgroeien naar inkomsten rond <strong>€10.000 per maand</strong>.</p>
+      <ul class="checklist">
+        <li>Buitendienst met veel vrijheid</li>
+        <li>Commissiegedreven beloning met hoge upside</li>
+        <li>Warme afspraken</li>
+        <li>Product met echte vraag in de markt</li>
+        <li>Direct impact op verduurzaming in Nederland</li>
+      </ul>
+    `,
+    checkUrl: "/sales-vacature",
+    checkLabel: "Check in 1 minuut of je in aanmerking komt →",
+    ervaringLabel: "Jaar ervaring in sales*",
+  },
+  appointment: {
+    typeLabel: "Appointment setter",
+    tag: "Vacature",
+    afdeling: "Sales support · kantoor Utrecht",
+    uren: "Fulltime · ZZP",
+    salaris: "Verdiensten tot €5.000 per maand",
+    niveau: "Mbo+/Hbo · commercieel",
+    contract: "ZZP-overeenkomst",
+    deadline: "Solliciteer voor 31 december 2026",
+    snipper:
+      "Full-time op ons kantoor in Utrecht. Jij plant sterke afspraken voor onze adviseurs, met een verdienmodel tot €5.000 per maand.",
+    body: `
+      <p>Als appointment setter zorg jij dat onze adviseurs elke dag sterke afspraken in de agenda hebben. Je belt en plant vanuit ons kantoor in Utrecht met huiseigenaren die serieus willen verduurzamen. Je werkt full-time, met heldere targets en een sterk product waar je trots op kunt zijn.</p>
+      <p>Voor gedreven professionals met commercieel instinct ligt er een aantrekkelijk verdienmodel klaar. Met focus, discipline en een goed proces kun je doorgroeien naar inkomsten rond <strong>€5.000 per maand</strong>.</p>
+      <ul class="checklist">
+        <li>Full-time op ons kantoor in Utrecht</li>
+        <li>Verdienmodel tot €5.000 per maand</li>
+        <li>Warme leads en een sterk product</li>
+        <li>Direct impact op verduurzaming in Nederland</li>
+      </ul>
+    `,
+    checkUrl: "/appointment-vacature",
+    checkLabel: "Check in 1 minuut of je in aanmerking komt →",
+    ervaringLabel: "Jaar ervaring in sales*",
+  },
+  monteur: {
+    typeLabel: "Monteur",
+    tag: "Vacature",
+    afdeling: "Installatie · buitendienst",
+    uren: "Fulltime · ZZP",
+    salaris: "Vast bedrag per opdracht",
+    niveau: "Mbo techniek / installatie",
+    contract: "ZZP-overeenkomst",
+    deadline: "Solliciteer voor 31 december 2026",
+    snipper:
+      "Jij maakt van advies een werkende installatie. ZZP met een vast bedrag per opdracht en moderne systemen.",
+    body: `
+      <p>Als monteur ben jij degene die van advies een werkende installatie maakt. Je zorgt dat thuisbatterij-systemen netjes, veilig en volgens planning worden geplaatst. Je werkt met moderne producten, duidelijke installatiestandaarden en klanten die bewust kiezen voor verduurzaming.</p>
+      <p>In deze rol werk je als <strong>ZZP’er</strong> met een <strong>vast bedrag per opdracht</strong>, zodat je precies weet waar je aan toe bent. Wie verantwoordelijkheid pakt en constant levert, krijgt ruimte om door te groeien.</p>
+      <ul class="checklist">
+        <li>ZZP met vast bedrag per opdracht</li>
+        <li>Werk aan toekomstbestendige energiesystemen</li>
+        <li>Duidelijke planning en ondersteuning vanuit kantoor</li>
+        <li>Veel doorgroeimogelijkheden in een snelgroeiend team</li>
+      </ul>
+    `,
+    checkUrl: null,
+    checkLabel: null,
+    ervaringLabel: "Jaar ervaring als monteur*",
+  },
+};
+
+function slugifyProvincie(name) {
+  return String(name)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+function buildVacatures() {
+  const posted = "15 oktober 2026";
+  const adviseurs = PROVINCIES.map((provincie) => {
+    const content = VACATURE_CONTENT.adviseur;
+    return {
+      id: `adviseur-${slugifyProvincie(provincie)}`,
+      type: "adviseur",
+      titel: `Adviseur Nederland - ${provincie}`,
+      provincie,
+      locatie: provincie,
+      posted,
+      ...content,
+    };
+  });
+
+  const appointment = {
+    id: "appointment-utrecht",
+    type: "appointment",
+    titel: "Appointment setter - kantoor Utrecht",
+    provincie: "Utrecht",
+    locatie: "Utrecht (kantoor)",
+    posted,
+    ...VACATURE_CONTENT.appointment,
+  };
+
+  const monteurs = PROVINCIES.map((provincie) => {
+    const content = VACATURE_CONTENT.monteur;
+    return {
+      id: `monteur-${slugifyProvincie(provincie)}`,
+      type: "monteur",
+      titel: `Monteur - ${provincie}`,
+      provincie,
+      locatie: provincie,
+      posted,
+      ...content,
+    };
+  });
+
+  return [...adviseurs, appointment, ...monteurs];
+}
+
+const ALL_VACATURES = buildVacatures();
+
+function vacatureCardHtml(job) {
+  return `
+    <article class="vacature-card">
+      <div class="vacature-card-top">
+        <span class="vacature-card-tag">${escapeHtml(job.tag)}</span>
+        <span class="vacature-card-date">Plaatsingsdatum: ${escapeHtml(job.posted)}</span>
+      </div>
+      <h2 class="vacature-card-title">
+        <a href="/vacatures?id=${encodeURIComponent(job.id)}">${escapeHtml(job.titel)}</a>
+      </h2>
+      <p class="vacature-card-afdeling">${escapeHtml(job.afdeling)}</p>
+      <ul class="vacature-card-meta">
+        <li><span class="vacature-meta-label">Locatie</span>${escapeHtml(job.locatie)}</li>
+        <li><span class="vacature-meta-label">Uren</span>${escapeHtml(job.uren)}</li>
+        <li><span class="vacature-meta-label">Beloning</span>${escapeHtml(job.salaris)}</li>
+        <li><span class="vacature-meta-label">Niveau</span>${escapeHtml(job.niveau)}</li>
+        <li><span class="vacature-meta-label">Deadline</span>${escapeHtml(job.deadline)}</li>
+        <li><span class="vacature-meta-label">Contract</span>${escapeHtml(job.contract)}</li>
+      </ul>
+      <p class="vacature-card-snipper">${escapeHtml(job.snipper)}</p>
+      <div class="vacature-card-footer">
+        <a class="vacature-card-link" href="/vacatures?id=${encodeURIComponent(job.id)}">Bekijk vacature →</a>
+      </div>
+    </article>
+  `;
+}
+
+function vacatureDetailHtml(job) {
+  const formId = `apply-${job.id}`;
+  const checkBlock = job.checkUrl
+    ? `<p class="vacature-detail-check"><a class="btn btn-green" href="${escapeHtml(job.checkUrl)}">${escapeHtml(job.checkLabel)}</a></p>`
+    : "";
+
+  return `
+    <div class="vacature-card-top">
+      <span class="vacature-card-tag">${escapeHtml(job.tag)}</span>
+      <span class="vacature-card-date">Plaatsingsdatum: ${escapeHtml(job.posted)}</span>
+    </div>
+    <h1 class="vacature-detail-title">${escapeHtml(job.titel)}</h1>
+    <p class="vacature-card-afdeling">${escapeHtml(job.afdeling)}</p>
+    <ul class="vacature-card-meta">
+      <li><span class="vacature-meta-label">Locatie</span>${escapeHtml(job.locatie)}</li>
+      <li><span class="vacature-meta-label">Uren</span>${escapeHtml(job.uren)}</li>
+      <li><span class="vacature-meta-label">Beloning</span>${escapeHtml(job.salaris)}</li>
+      <li><span class="vacature-meta-label">Niveau</span>${escapeHtml(job.niveau)}</li>
+      <li><span class="vacature-meta-label">Deadline</span>${escapeHtml(job.deadline)}</li>
+      <li><span class="vacature-meta-label">Contract</span>${escapeHtml(job.contract)}</li>
+    </ul>
+    <div class="vacature-detail-body">${job.body}</div>
+    ${checkBlock}
+    <div class="form-panel vacature-form-panel">
+      <h2>Solliciteer in 1 minuut</h2>
+      <form class="form-grid" data-vacature-form data-vacature-type="${escapeHtml(job.titel)}">
+        <div class="field">
+          <label for="${formId}-cv">CV upload (optioneel)</label>
+          <input id="${formId}-cv" name="cv" type="file" />
+        </div>
+        <div class="form-row cols-2">
+          <div class="field">
+            <label for="${formId}-naam">Naam*</label>
+            <input id="${formId}-naam" name="naam" required />
+          </div>
+          <div class="field">
+            <label for="${formId}-woonplaats">Woonplaats*</label>
+            <input id="${formId}-woonplaats" name="woonplaats" required />
+          </div>
+        </div>
+        <div class="form-row cols-2">
+          <div class="field">
+            <label for="${formId}-ervaring">${escapeHtml(job.ervaringLabel)}</label>
+            <input id="${formId}-ervaring" name="ervaring" type="number" min="0" placeholder="Bijv. 3" required />
+          </div>
+          <div class="field">
+            <label for="${formId}-telefoon">Telefoon*</label>
+            <input id="${formId}-telefoon" name="telefoon" type="tel" required />
+          </div>
+        </div>
+        <div class="field">
+          <label for="${formId}-email">Email*</label>
+          <input id="${formId}-email" name="email" type="email" required />
+        </div>
+        <label class="field-checkbox">
+          <input id="${formId}-rijbewijs" name="rijbewijs" type="checkbox" value="ja" />
+          <span>Ik heb een rijbewijs</span>
+        </label>
+        <button class="btn btn-green btn-wide" type="submit">Verzenden</button>
+      </form>
+    </div>
+  `;
+}
+
+function initVacatureBoard() {
+  const resultsEl = qs("#vacature-results");
+  if (!resultsEl) return;
+
+  const listView = qs("#vacature-list-view");
+  const listHero = qs("#vacature-list-hero");
+  const detailView = qs("#vacature-detail-view");
+  const detailEl = qs("#vacature-detail");
+  const countEl = qs("#vacature-count");
+  const roleNav = qs("#vacature-role-nav");
+  const backLink = qs("#vacature-back");
+
+  let activeType = new URLSearchParams(window.location.search).get("type") || "";
+
+  function countsByType() {
+    return {
+      all: ALL_VACATURES.length,
+      adviseur: ALL_VACATURES.filter((j) => j.type === "adviseur").length,
+      appointment: ALL_VACATURES.filter((j) => j.type === "appointment").length,
+      monteur: ALL_VACATURES.filter((j) => j.type === "monteur").length,
+    };
+  }
+
+  function syncRoleNav() {
+    const counts = countsByType();
+    const allEl = qs("[data-count-all]");
+    const adviseurEl = qs("[data-count-adviseur]");
+    const appointmentEl = qs("[data-count-appointment]");
+    const monteurEl = qs("[data-count-monteur]");
+    if (allEl) allEl.textContent = String(counts.all);
+    if (adviseurEl) adviseurEl.textContent = String(counts.adviseur);
+    if (appointmentEl) appointmentEl.textContent = String(counts.appointment);
+    if (monteurEl) monteurEl.textContent = String(counts.monteur);
+
+    qsa("[data-role-filter]", roleNav).forEach((link) => {
+      const filter = link.getAttribute("data-role-filter") || "";
+      link.classList.toggle("is-active", filter === activeType);
     });
   }
 
-  tabs.forEach((tab) => {
-    tab.addEventListener("click", () => activate(tab.dataset.vacatureTab));
+  function filteredVacatures() {
+    return ALL_VACATURES.filter((job) => !activeType || job.type === activeType).sort((a, b) =>
+      a.titel.localeCompare(b.titel, "nl")
+    );
+  }
+
+  function setUrl() {
+    const next = new URLSearchParams();
+    if (activeType) next.set("type", activeType);
+    const qsString = next.toString();
+    window.history.replaceState({}, "", qsString ? `/vacatures?${qsString}` : "/vacatures");
+  }
+
+  function showList() {
+    if (listView) listView.hidden = false;
+    if (listHero) listHero.hidden = false;
+    if (detailView) detailView.hidden = true;
+    document.title = "Vacatures | Werken bij Batterijconcept";
+    syncRoleNav();
+
+    const list = filteredVacatures();
+    if (countEl) {
+      countEl.textContent =
+        list.length === 1 ? "1 vacature" : `${list.length} vacatures`;
+    }
+    resultsEl.innerHTML = list.length
+      ? list.map(vacatureCardHtml).join("")
+      : `<p class="vacature-empty">Geen vacatures gevonden.</p>`;
+  }
+
+  function bindDetailForm() {
+    const detailForm = qs("[data-vacature-form]", detailEl);
+    if (!detailForm || detailForm.dataset.bound === "1") return;
+    detailForm.dataset.bound = "1";
+    detailForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const submitBtn = qs('button[type="submit"]', detailForm);
+      const original = submitBtn?.textContent;
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Verzenden…";
+      }
+      try {
+        const vacature = String(detailForm.dataset.vacatureType || "Vacature").trim();
+        await submitSollicitatie(detailForm, vacature);
+        detailForm.reset();
+        alert("Bedankt! We hebben je sollicitatie ontvangen.");
+      } catch (err) {
+        alert(err.message || "Er ging iets mis. Probeer het opnieuw.");
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = original || "Verzenden";
+        }
+      }
+    });
+  }
+
+  function showDetail(id) {
+    const job = ALL_VACATURES.find((item) => item.id === id);
+    if (!job || !detailEl) {
+      showList();
+      return;
+    }
+    if (listView) listView.hidden = true;
+    if (listHero) listHero.hidden = true;
+    if (detailView) detailView.hidden = false;
+    detailEl.innerHTML = vacatureDetailHtml(job);
+    document.title = `${job.titel} | Werken bij Batterijconcept`;
+    bindDetailForm();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const detailId = params.get("id");
+  if (detailId) {
+    showDetail(detailId);
+  } else {
+    showList();
+  }
+
+  roleNav?.addEventListener("click", (e) => {
+    const link = e.target.closest("[data-role-filter]");
+    if (!link) return;
+    e.preventDefault();
+    activeType = link.getAttribute("data-role-filter") || "";
+    setUrl();
+    showList();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  backLink?.addEventListener("click", (e) => {
+    e.preventDefault();
+    setUrl();
+    showList();
+    window.scrollTo({ top: 0, behavior: "smooth" });
   });
 }
 
@@ -1189,18 +1540,21 @@ function initWhatsAppButton() {
   if (qs(".whatsapp-fab")) return;
   if (document.body.classList.contains("sales-quiz-body")) return;
 
+  const message = encodeURIComponent(
+    "Hoi Batterijconcept, ik heb interesse in een vacature en wil graag mijn motivatie delen: "
+  );
   const link = document.createElement("a");
   link.className = "whatsapp-fab";
-  link.href = "https://wa.me/31858001645";
+  link.href = `https://wa.me/31858001645?text=${message}`;
   link.target = "_blank";
   link.rel = "noopener noreferrer";
-  link.setAttribute("aria-label", "WhatsApp: 085 800 1645");
+  link.setAttribute("aria-label", "WhatsApp Batterijconcept: 085 800 1645 — stuur je motivatie");
   link.innerHTML = `
     <svg viewBox="0 0 32 32" aria-hidden="true" fill="currentColor">
       <path d="M19.11 17.34c-.28-.14-1.64-.81-1.9-.9-.25-.1-.44-.14-.62.14-.18.28-.71.9-.87 1.08-.16.18-.32.2-.6.07-.28-.14-1.17-.43-2.23-1.37-.82-.73-1.38-1.64-1.54-1.92-.16-.28-.02-.43.12-.57.13-.13.28-.32.42-.48.14-.16.18-.28.28-.46.1-.18.05-.35-.02-.48-.07-.14-.62-1.5-.85-2.05-.22-.53-.45-.46-.62-.47h-.53c-.18 0-.48.07-.73.35-.25.28-.96.94-.96 2.28s.98 2.64 1.12 2.82c.14.18 1.93 2.95 4.68 4.14 1.74.75 2.36.82 3.21.69.5-.08 1.64-.67 1.87-1.32.23-.65.23-1.2.16-1.32-.07-.11-.25-.18-.53-.32z"/>
       <path d="M16.02 3C9.39 3 4 8.38 4 15c0 2.22.61 4.29 1.67 6.07L4 29l8.12-1.64A11.9 11.9 0 0 0 16.02 27C22.65 27 28 21.62 28 15S22.65 3 16.02 3zm0 21.82c-1.95 0-3.76-.56-5.3-1.53l-.38-.24-4.82.97 1.02-4.7-.25-.4A9.78 9.78 0 0 1 6.2 15c0-5.42 4.42-9.82 9.82-9.82s9.82 4.4 9.82 9.82-4.4 9.82-9.82 9.82z"/>
     </svg>
-    <span>WhatsApp</span>
+    <span>App je motivatie</span>
   `;
   document.body.appendChild(link);
 }
@@ -1211,7 +1565,7 @@ document.addEventListener("DOMContentLoaded", () => {
   ensureFbp();
   initNav();
   initForms();
-  initVacatureTabs();
+  initVacatureBoard();
   initSalesQuiz();
   initProductModal();
   initWhatsAppButton();

@@ -4,19 +4,15 @@ import { trackMetaLeadSafe } from "./lib/meta-capi.js";
 
 function postcodeProxyPlugin(token) {
   const pages = new Set([
+    "/vacatures",
+    "/over-ons",
+    "/contact",
     "/sales-vacature",
     "/appointment-vacature",
   ]);
 
   const handler = async (req, res, next) => {
     const url = new URL(req.url, "http://localhost");
-
-    if (url.pathname === "/vacatures" || url.pathname === "/vacatures/") {
-      res.statusCode = 302;
-      res.setHeader("Location", "/");
-      res.end();
-      return;
-    }
 
     if (url.pathname.endsWith("/api/sollicitaties") || url.pathname === "/api/sollicitaties") {
       if (req.method !== "POST") {
@@ -244,6 +240,9 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         input: {
           main: resolve(__dirname, "index.html"),
+          vacatures: resolve(__dirname, "vacatures.html"),
+          overOns: resolve(__dirname, "over-ons.html"),
+          contact: resolve(__dirname, "contact.html"),
           salesVacature: resolve(__dirname, "sales-vacature.html"),
           appointmentVacature: resolve(__dirname, "appointment-vacature.html"),
         },
