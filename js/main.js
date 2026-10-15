@@ -74,6 +74,7 @@ function formatPostcodeDisplay(value) {
 }
 
 const ATTRIBUTION_STORAGE_KEY = "bc_lead_attribution";
+const META_PIXEL_ID = "1648367720142834";
 
 function readUrlParam(params, ...keys) {
   for (const key of keys) {
@@ -154,10 +155,22 @@ function getCookie(name) {
   }
 }
 
+function cookieDomainSuffix() {
+  try {
+    const host = window.location.hostname;
+    if (host === "batterijconcept.nl" || host.endsWith(".batterijconcept.nl")) {
+      return "; domain=.batterijconcept.nl";
+    }
+  } catch {
+    /* ignore */
+  }
+  return "";
+}
+
 function setCookie(name, value, days = 90) {
   try {
     const maxAge = Math.floor(days * 24 * 60 * 60);
-    document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=Lax${cookieDomainSuffix()}`;
   } catch {
     /* ignore */
   }
@@ -168,12 +181,57 @@ function newEventId() {
   return `bc_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
+/** Meta browser id — required for Ads Manager attribution when Pixel is present. */
+function ensureFbp() {
+  const existing = getCookie("_fbp");
+  if (existing) return existing;
+  const fbp = `fb.1.${Date.now()}.${Math.floor(1000000000 + Math.random() * 9000000000)}`;
+  setCookie("_fbp", fbp, 90);
+  return fbp;
+}
+
+function initMetaPixel() {
+  if (typeof window === "undefined") return;
+  if (typeof window.fbq === "function") return;
+
+  const f = window;
+  const b = document;
+  const e = "script";
+  const v = "https://connect.facebook.net/en_US/fbevents.js";
+  let n = f.fbq = function (...args) {
+    if (n.callMethod) n.callMethod(...args);
+    else n.queue.push(args);
+  };
+  if (!f._fbq) f._fbq = n;
+  n.push = n;
+  n.loaded = true;
+  n.version = "2.0";
+  n.queue = [];
+  const t = b.createElement(e);
+  t.async = true;
+  t.src = v;
+  const s = b.getElementsByTagName(e)[0];
+  s?.parentNode?.insertBefore(t, s);
+
+  ensureFbp();
+  window.fbq("init", META_PIXEL_ID);
+  window.fbq("track", "PageView");
+}
+
+/** Browser Lead with same eventID as CAPI (dedup). */
+function trackBrowserLead(eventId, customData = {}) {
+  initMetaPixel();
+  if (typeof window.fbq !== "function" || !eventId) return;
+  window.fbq("track", "Lead", customData, { eventID: String(eventId) });
+}
+
 /** Meta CAPI / Pixel matching: fbc (click id), fbp (browser id) */
 function getMetaTracking() {
+  initMetaPixel();
   captureAttributionFromUrl();
   const stored = getStoredAttribution();
   const fbc = getCookie("_fbc") || stored.fbc || "";
-  const fbp = getCookie("_fbp") || stored.fbp || "";
+  const fbp = ensureFbp() || getCookie("_fbp") || stored.fbp || "";
   return {
     fbc: fbc || undefined,
     fbp: fbp || undefined,
@@ -198,6 +256,7 @@ function getUtmSource(fallback = "website") {
 }
 
 async function submitLead(payload) {
+  const meta = getMetaTracking();
   const res = await fetch("/api/leads", {
     method: "POST",
     headers: {
@@ -206,7 +265,7 @@ async function submitLead(payload) {
     },
     body: JSON.stringify({
       ...getLeadAttribution(),
-      ...getMetaTracking(),
+      ...meta,
       ...payload,
     }),
   });
@@ -215,6 +274,11 @@ async function submitLead(payload) {
   if (!res.ok) {
     throw new Error(data.error || data.message || "Lead versturen mislukt.");
   }
+  trackBrowserLead(meta.event_id, {
+    content_name: payload.utm_source || payload.bron || "website-lead",
+    currency: "EUR",
+    value: 0,
+  });
   return data;
 }
 
@@ -223,6 +287,7 @@ async function submitSollicitatie(form, vacature) {
   const cv = fd.get("cv");
   const cvNaam = cv instanceof File && cv.size > 0 ? cv.name : "";
   const rijbewijs = fd.get("rijbewijs") ? "Ja" : "Nee";
+  const meta = getMetaTracking();
 
   const payload = {
     naam: String(fd.get("naam") || "").trim(),
@@ -243,7 +308,7 @@ async function submitSollicitatie(form, vacature) {
       .join("\n"),
     bron: "werkenbij-formulier",
     cv: cvNaam || undefined,
-    ...getMetaTracking(),
+    ...meta,
   };
 
   const res = await fetch("/api/sollicitaties", {
@@ -259,6 +324,11 @@ async function submitSollicitatie(form, vacature) {
   if (!res.ok) {
     throw new Error(data.error || data.message || "Sollicitatie versturen mislukt.");
   }
+  trackBrowserLead(meta.event_id, {
+    content_name: vacature || "sollicitatie",
+    currency: "EUR",
+    value: 0,
+  });
   return data;
 }
 
@@ -730,9 +800,74 @@ function initForms() {
   });
 }
 
+const VACATURE_QUIZ_CONFIG = {
+  sales: {
+    functie: "ZZP sales verkoper",
+    bron: "sales-vacature-quiz",
+    qualifiedText:
+      "Je komt waarschijnlijk in aanmerking om te starten met deze ZZP-functie.",
+    fulltimeRejectText:
+      "Bedankt voor je interesse. Voor deze rol zoeken we iemand die full-time wil groeien naar minimaal €10k per maand. Twijfel je toch? Mail gerust naar info@batterijconcept.nl.",
+    buildNotitie(answers, { postcode, huisnummer, qualified }) {
+      return [
+        `Vraag: We verkopen thuisbatterijen. Ken je deze markt al?`,
+        `Antwoord: ${answers.markt}`,
+        ``,
+        `Vraag: We zoeken mensen die full-time aan de slag willen, en minimaal €10k per maand willen verdienen. Ben jij dat?`,
+        `Antwoord: ${answers.fulltime}`,
+        ``,
+        `Vraag: Hoe oud ben je?`,
+        `Antwoord: ${answers.leeftijd}`,
+        ``,
+        `Vraag: Heb je al ervaring in de verduurzamingsmarkt?`,
+        `Antwoord: ${answers.ervaring}`,
+        ``,
+        `Vraag: Heb je rijbewijs B?`,
+        `Antwoord: ${answers.rijbewijs}`,
+        ``,
+        `Vraag: Heb je al een KvK?`,
+        `Antwoord: ${answers.kvk}`,
+        ``,
+        `Postcode: ${postcode}`,
+        `Huisnummer: ${huisnummer}`,
+        ``,
+        `Uitslag: ${qualified ? "In aanmerking" : "Geen match"}`,
+      ].join("\n");
+    },
+  },
+  appointment: {
+    functie: "Appointment setter",
+    bron: "appointment-vacature-quiz",
+    qualifiedText:
+      "Je komt waarschijnlijk in aanmerking om te starten als appointment setter.",
+    fulltimeRejectText:
+      "Bedankt voor je interesse. Voor deze rol zoeken we iemand die full-time op ons kantoor in Utrecht wil groeien naar minimaal €5k per maand. Twijfel je toch? Mail gerust naar info@batterijconcept.nl.",
+    buildNotitie(answers, { postcode, huisnummer, qualified }) {
+      return [
+        `Vraag: Heb je al ervaring in de verduurzamingsmarkt?`,
+        `Antwoord: ${answers.ervaring}`,
+        ``,
+        `Vraag: We zoeken mensen die full-time aan de slag willen op ons kantoor in Utrecht, en minimaal €5k per maand willen verdienen. Ben jij dat?`,
+        `Antwoord: ${answers.fulltime}`,
+        ``,
+        `Vraag: Heb je al een KvK?`,
+        `Antwoord: ${answers.kvk}`,
+        ``,
+        `Postcode: ${postcode}`,
+        `Huisnummer: ${huisnummer}`,
+        ``,
+        `Uitslag: ${qualified ? "In aanmerking" : "Geen match"}`,
+      ].join("\n");
+    },
+  },
+};
+
 function initSalesQuiz() {
   const root = qs("[data-sales-quiz]");
   if (!root) return;
+
+  const quizType = root.dataset.quizType || "sales";
+  const config = VACATURE_QUIZ_CONFIG[quizType] || VACATURE_QUIZ_CONFIG.sales;
 
   const answers = {
     markt: "",
@@ -740,6 +875,7 @@ function initSalesQuiz() {
     leeftijd: "",
     ervaring: "",
     rijbewijs: "",
+    kvk: "",
   };
 
   let step = 1;
@@ -762,7 +898,12 @@ function initSalesQuiz() {
       el.hidden = !active;
       el.classList.toggle("is-active", active);
     });
-    if (progress) progress.setAttribute("aria-hidden", step === 1 && !root.classList.contains("is-fullscreen") ? "true" : "false");
+    if (progress) {
+      progress.setAttribute(
+        "aria-hidden",
+        step === 1 && !root.classList.contains("is-fullscreen") ? "true" : "false"
+      );
+    }
     updateProgress();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -771,7 +912,7 @@ function initSalesQuiz() {
     root.classList.add("is-fullscreen");
   }
 
-  function showResult(qualified) {
+  function showResult(qualified, reason = "fulltime") {
     const icon = qs("[data-result-icon]", root);
     const title = qs("[data-result-title]", root);
     const text = qs("[data-result-text]", root);
@@ -783,27 +924,52 @@ function initSalesQuiz() {
       icon.textContent = qualified ? "✓" : "–";
     }
     if (title) {
-      title.textContent = qualified
-        ? "Gefeliciteerd!"
-        : "Op dit moment niet de beste match";
+      if (qualified) {
+        title.textContent = "Gefeliciteerd!";
+      } else if (reason === "kvk") {
+        title.textContent = "Helaas";
+      } else {
+        title.textContent = "Op dit moment niet de beste match";
+      }
     }
     if (text) {
-      text.textContent = qualified
-        ? "Je komt waarschijnlijk in aanmerking om te starten met deze ZZP-functie."
-        : "Bedankt voor je interesse. Voor deze rol zoeken we iemand die full-time wil groeien naar minimaal €10k per maand. Twijfel je toch? Mail gerust naar info@batterijconcept.nl.";
+      if (qualified) {
+        text.textContent = config.qualifiedText;
+      } else if (reason === "kvk") {
+        text.textContent =
+          "Helaas lijkt het alsof je niet geschikt bent, omdat u nog geen KvK hebt.";
+      } else {
+        text.textContent = config.fulltimeRejectText;
+      }
     }
     if (qualifiedBox) qualifiedBox.hidden = !qualified;
-    if (noActions) noActions.hidden = qualified;
+    if (noActions) noActions.hidden = qualified || reason === "kvk";
     showStep("result");
   }
 
-  root.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-answer]");
-    if (!btn || !root.contains(btn)) return;
-
-    const activeStep = qs(".sales-quiz-step.is-active", root);
-    const stepId = Number(activeStep?.dataset.quizStep);
-    const value = btn.dataset.answer || "";
+  function handleAnswer(stepId, value) {
+    if (quizType === "appointment") {
+      if (stepId === 1) {
+        answers.ervaring = value;
+        enterFullscreen();
+        showStep(2);
+        return;
+      }
+      if (stepId === 2) {
+        answers.fulltime = value;
+        showStep(3);
+        return;
+      }
+      if (stepId === 3) {
+        answers.kvk = value;
+        if (value === "Nee") {
+          showResult(false, "kvk");
+          return;
+        }
+        showStep(4);
+      }
+      return;
+    }
 
     if (stepId === 1) {
       answers.markt = value;
@@ -824,7 +990,26 @@ function initSalesQuiz() {
     if (stepId === 5) {
       answers.rijbewijs = value;
       showStep(6);
+      return;
     }
+    if (stepId === 6) {
+      answers.kvk = value;
+      if (value === "Nee") {
+        showResult(false, "kvk");
+        return;
+      }
+      showStep(7);
+    }
+  }
+
+  root.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-answer]");
+    if (!btn || !root.contains(btn)) return;
+
+    const activeStep = qs(".sales-quiz-step.is-active", root);
+    const stepId = Number(activeStep?.dataset.quizStep);
+    const value = btn.dataset.answer || "";
+    handleAnswer(stepId, value);
   });
 
   const continueBtn = qs("[data-continue]", root);
@@ -854,8 +1039,10 @@ function initSalesQuiz() {
     const achternaam = String(fd.get("achternaam") || "").trim();
     const email = String(fd.get("email") || "").trim();
     const telefoon = String(fd.get("telefoon") || "").trim();
+    const postcode = formatPostcodeDisplay(fd.get("postcode"));
+    const huisnummer = String(fd.get("huisnr") || "").trim();
 
-    if (!voornaam || !achternaam || !email || !telefoon) {
+    if (!voornaam || !achternaam || !email || !telefoon || !postcode || !huisnummer) {
       showToast("Vul alle velden in.");
       return;
     }
@@ -866,29 +1053,13 @@ function initSalesQuiz() {
       submitBtn.textContent = "Even geduld…";
     }
 
-    const qualified = answers.fulltime === "Ja";
+    const qualified = answers.fulltime === "Ja" && answers.kvk === "Ja";
     const naam = `${voornaam} ${achternaam}`.trim();
-    const functie = "ZZP sales verkoper";
-    const notitie = [
-      `Vraag: We verkopen thuisbatterijen. Ken je deze markt al?`,
-      `Antwoord: ${answers.markt}`,
-      ``,
-      `Vraag: We zoeken mensen die full-time aan de slag willen, en minimaal €10k per maand willen verdienen. Ben jij dat?`,
-      `Antwoord: ${answers.fulltime}`,
-      ``,
-      `Vraag: Hoe oud ben je?`,
-      `Antwoord: ${answers.leeftijd}`,
-      ``,
-      `Vraag: Heb je al ervaring in de verduurzamingsmarkt?`,
-      `Antwoord: ${answers.ervaring}`,
-      ``,
-      `Vraag: Heb je rijbewijs B?`,
-      `Antwoord: ${answers.rijbewijs}`,
-      ``,
-      `Uitslag: ${qualified ? "In aanmerking" : "Geen match"}`,
-    ].join("\n");
+    const functie = config.functie;
+    const notitie = config.buildNotitie(answers, { postcode, huisnummer, qualified });
 
     try {
+      const meta = getMetaTracking();
       const res = await fetch("/api/sollicitaties", {
         method: "POST",
         headers: {
@@ -899,17 +1070,24 @@ function initSalesQuiz() {
           naam,
           email,
           telefoon,
+          postcode,
+          huisnummer,
           functie,
           vacature: functie,
           notitie,
-          bron: "sales-vacature-quiz",
-          ...getMetaTracking(),
+          bron: config.bron,
+          ...meta,
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         throw new Error(data.error || data.message || "Versturen mislukt.");
       }
+      trackBrowserLead(meta.event_id, {
+        content_name: functie,
+        currency: "EUR",
+        value: 0,
+      });
       showResult(qualified);
     } catch (err) {
       showToast(err.message || "Versturen mislukt. Probeer opnieuw.");
@@ -1028,7 +1206,9 @@ function initWhatsAppButton() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  initMetaPixel();
   captureAttributionFromUrl();
+  ensureFbp();
   initNav();
   initForms();
   initVacatureTabs();

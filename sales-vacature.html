@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sales vacature check | Batterijconcept.nl</title>
-  <meta name="description" content="Bekijk of je in aanmerking komt voor de ZZP sales vacature bij Batterijconcept. Beantwoord 4 korte vragen — duurt 1 minuut." />
+  <title>Sales vacature check | Werken bij Batterijconcept</title>
+  <meta name="description" content="Bekijk of je in aanmerking komt voor de ZZP sales vacature bij Batterijconcept. Beantwoord 6 korte vragen — duurt 1 minuut." />
   <meta name="robots" content="index, follow" />
-  <link rel="canonical" href="https://www.batterijconcept.nl/sales-vacature" />
+  <link rel="canonical" href="https://werkenbij.batterijconcept.nl/sales-vacature" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet" />
@@ -14,9 +14,21 @@
   <link rel="icon" type="image/png" href="/favicon-32.png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <link rel="stylesheet" href="/css/styles.css" />
+  <script>
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+    n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init','1648367720142834');
+    fbq('track','PageView');
+  </script>
 </head>
 <body class="sales-quiz-body">
-  <div class="sales-quiz-page" data-sales-quiz>
+  <noscript>
+    <img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1648367720142834&ev=PageView&noscript=1" alt="" />
+  </noscript>
+  <div class="sales-quiz-page" data-sales-quiz data-quiz-type="sales">
     <header class="sales-quiz-top">
       <a class="logo" href="/" aria-label="Batterijconcept home">
         <img src="/images/logo.png" alt="Batterijconcept" />
@@ -32,7 +44,7 @@
     <div class="sales-quiz-shell" data-quiz-shell>
       <div class="sales-quiz-card">
         <div class="sales-quiz-banner" data-quiz-banner>
-          Beantwoord 5 korte vragen om te zien of je in aanmerking komt
+          Beantwoord 6 korte vragen om te zien of je in aanmerking komt
           <span class="sales-quiz-banner-arrow" aria-hidden="true"></span>
         </div>
 
@@ -43,6 +55,7 @@
           <span class="sales-quiz-dot" data-dot="4"></span>
           <span class="sales-quiz-dot" data-dot="5"></span>
           <span class="sales-quiz-dot" data-dot="6"></span>
+          <span class="sales-quiz-dot" data-dot="7"></span>
         </div>
 
         <!-- Step 1 -->
@@ -98,8 +111,18 @@
           <p class="sales-quiz-hint"><span aria-hidden="true">⏱</span> Meedoen duurt maar 1 minuut</p>
         </div>
 
-        <!-- Step 6: contact -->
+        <!-- Step 6 -->
         <div class="sales-quiz-step" data-quiz-step="6" hidden>
+          <h2 class="sales-quiz-question">Heb je al een KvK?</h2>
+          <div class="sales-quiz-options">
+            <button type="button" class="sales-quiz-option" data-answer="Ja">Ja <span aria-hidden="true">→</span></button>
+            <button type="button" class="sales-quiz-option" data-answer="Nee">Nee <span aria-hidden="true">→</span></button>
+          </div>
+          <p class="sales-quiz-hint"><span aria-hidden="true">⏱</span> Meedoen duurt maar 1 minuut</p>
+        </div>
+
+        <!-- Step 7: contact -->
+        <div class="sales-quiz-step" data-quiz-step="7" hidden>
           <h2 class="sales-quiz-question">Laat je gegevens achter</h2>
           <p class="sales-quiz-step-sub">Dan tonen we meteen of je in aanmerking komt.</p>
           <form class="sales-quiz-form" data-quiz-form novalidate>
@@ -120,6 +143,16 @@
             <div class="field">
               <label for="quiz-telefoon">Telefoonnummer*</label>
               <input id="quiz-telefoon" name="telefoon" type="tel" required autocomplete="tel" />
+            </div>
+            <div class="form-row cols-2">
+              <div class="field">
+                <label for="quiz-postcode">Postcode*</label>
+                <input id="quiz-postcode" name="postcode" required autocomplete="postal-code" placeholder="1234 AB" />
+              </div>
+              <div class="field">
+                <label for="quiz-huisnr">Huisnummer*</label>
+                <input id="quiz-huisnr" name="huisnr" required autocomplete="address-line2" placeholder="12" />
+              </div>
             </div>
             <button class="sales-quiz-option sales-quiz-submit" type="submit">
               Bekijk uitslag <span aria-hidden="true">→</span>

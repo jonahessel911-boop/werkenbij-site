@@ -1,8 +1,8 @@
-# Batterijconcept.nl
+# Werken bij Batterijconcept
 
-Statische website voor Batterijconcept — thuisbatterij-advies en installatie.
+Vacature-site voor Batterijconcept — live op **werkenbij.batterijconcept.nl**.
 
-**Repo:** https://github.com/jonahessel911-boop/batterijconcept
+De consumentenwebsite staat apart op [batterijconcept.nl](https://www.batterijconcept.nl/).
 
 ## Lokaal
 
@@ -13,7 +13,7 @@ npm run dev
 
 ## Deploy (Vercel)
 
-Connected to GitHub: pushes to `main` deploy automatisch.
+Koppel domein `werkenbij.batterijconcept.nl` aan dit project. Pushes naar `main` deployen automatisch.
 
 ```bash
 npm run build
@@ -22,8 +22,8 @@ npx vercel --prod
 
 ## Pagina’s
 
-- `index.html` — home met hero + scan
-- `producten.html` — Alpha ESS producten
-- `advies-aan-huis.html` — aanvraagformulier adviseur
-- `over-ons.html` — over Batterijconcept
-- `contact.html` — contactgegevens
+- `/` — vacatures (home)
+- `/sales-vacature` — ZZP sales vacature check
+- `/appointment-vacature` — appointment setter vacature check
+
+Oude consumentenroutes (`/producten`, `/service`, enz.) redirecten naar batterijconcept.nl.

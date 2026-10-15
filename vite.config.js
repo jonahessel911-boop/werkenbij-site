@@ -4,19 +4,19 @@ import { trackMetaLeadSafe } from "./lib/meta-capi.js";
 
 function postcodeProxyPlugin(token) {
   const pages = new Set([
-    "/producten",
-    "/advies-aan-huis",
-    "/over-ons",
-    "/contact",
-    "/vrienden-van-vrienden",
-    "/service",
-    "/vacatures",
-    "/algemene-voorwaarden",
     "/sales-vacature",
+    "/appointment-vacature",
   ]);
 
   const handler = async (req, res, next) => {
     const url = new URL(req.url, "http://localhost");
+
+    if (url.pathname === "/vacatures" || url.pathname === "/vacatures/") {
+      res.statusCode = 302;
+      res.setHeader("Location", "/");
+      res.end();
+      return;
+    }
 
     if (url.pathname.endsWith("/api/sollicitaties") || url.pathname === "/api/sollicitaties") {
       if (req.method !== "POST") {
@@ -72,7 +72,7 @@ function postcodeProxyPlugin(token) {
 
           const text = await upstream.text();
           if (upstream.ok) {
-            trackMetaLeadSafe(
+            await trackMetaLeadSafe(
               {
                 email: parsed.email,
                 phone: parsed.telefoon,
@@ -84,7 +84,7 @@ function postcodeProxyPlugin(token) {
                 contentName: parsed.vacature || parsed.bron || "sollicitatie",
               },
               req
-            ).catch(() => {});
+            );
           }
           res.statusCode = upstream.status;
           res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -158,7 +158,7 @@ function postcodeProxyPlugin(token) {
           });
           const text = await upstream.text();
           if (upstream.ok) {
-            trackMetaLeadSafe(
+            await trackMetaLeadSafe(
               {
                 email: parsed.email,
                 phone: parsed.telefoon || parsed.phone,
@@ -170,7 +170,7 @@ function postcodeProxyPlugin(token) {
                 contentName: parsed.utm_source || parsed.bron || "website-lead",
               },
               req
-            ).catch(() => {});
+            );
           }
           res.statusCode = upstream.status;
           res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -231,7 +231,11 @@ function postcodeProxyPlugin(token) {
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
-  const token = env.POSTCODE_API_TOKEN || process.env.POSTCODE_API_TOKEN || "";
+  // loadEnv does not put vars on process.env; meta-capi reads process.env.
+  for (const key of ["META_CAPI_ACCESS_TOKEN", "META_PIXEL_ID", "POSTCODE_API_TOKEN"]) {
+    if (env[key]) process.env[key] = env[key];
+  }
+  const token = process.env.POSTCODE_API_TOKEN || "";
 
   return {
     base: "/",
@@ -240,15 +244,8 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         input: {
           main: resolve(__dirname, "index.html"),
-          producten: resolve(__dirname, "producten.html"),
-          advies: resolve(__dirname, "advies-aan-huis.html"),
-          overOns: resolve(__dirname, "over-ons.html"),
-          contact: resolve(__dirname, "contact.html"),
-          vrienden: resolve(__dirname, "vrienden-van-vrienden.html"),
-          service: resolve(__dirname, "service.html"),
-          vacatures: resolve(__dirname, "vacatures.html"),
-          voorwaarden: resolve(__dirname, "algemene-voorwaarden.html"),
           salesVacature: resolve(__dirname, "sales-vacature.html"),
+          appointmentVacature: resolve(__dirname, "appointment-vacature.html"),
         },
       },
     },

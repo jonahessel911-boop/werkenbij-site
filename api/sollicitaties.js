@@ -85,7 +85,8 @@ export default async function handler(req, res) {
       return;
     }
 
-    trackMetaLeadSafe(
+    // Must await: Vercel freezes the function after the response is sent.
+    await trackMetaLeadSafe(
       {
         email: body.email,
         phone: body.telefoon || body.phone,
@@ -97,7 +98,7 @@ export default async function handler(req, res) {
         contentName: body.vacature || body.bron || "sollicitatie",
       },
       req
-    ).catch(() => {});
+    );
 
     res.status(upstream.status).json(data);
   } catch {
